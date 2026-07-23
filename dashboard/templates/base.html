@@ -44,6 +44,13 @@
       padding: 0.5rem 1rem; font: inherit; cursor: pointer;
     }
     button.primary:hover, input[type=submit]:hover { background: #1f3f80; }
+    button.secondary {
+      background: white; color: #2952a3; border: 1px solid #2952a3; border-radius: 0.25rem;
+      padding: 0.4rem 0.75rem; font: inherit; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
+    }
+    button.secondary:hover { background: #eef2fa; }
+    .input-with-button { display: flex; gap: 0.5rem; align-items: center; }
+    .input-with-button input { flex: 1; }
     .error { color: #b3261e; background: #fdecea; border: 1px solid #f5c6c2; border-radius: 0.25rem; padding: 0.5rem 0.75rem; margin-bottom: 1rem; }
     .hint { color: #777; font-size: 0.8rem; }
     .auth-card { max-width: 380px; margin: 3rem auto; }
@@ -79,6 +86,21 @@
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/static/sw.js');
+    }
+
+    // A guessable topic name defeats the point - anyone who knows it can
+    // subscribe (or publish) to it, since ntfy topics have no access
+    // control beyond obscurity. Random client-side generation avoids
+    // people picking something short/memorable/guessable instead.
+    function generateNtfyTopic(inputId) {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      const bytes = new Uint8Array(20);
+      crypto.getRandomValues(bytes);
+      let slug = '';
+      for (let i = 0; i < bytes.length; i++) {
+        slug += chars[bytes[i] % chars.length];
+      }
+      document.getElementById(inputId).value = 'https://ntfy.sh/huisjagers-' + slug;
     }
   </script>
 </body>

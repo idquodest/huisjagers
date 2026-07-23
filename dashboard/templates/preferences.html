@@ -11,8 +11,11 @@
     <div class="field-row">
       <div class="field">
         <label for="ntfy_topic_url">ntfy topic URL</label>
-        <input type="text" id="ntfy_topic_url" name="ntfy_topic_url" value="{{ session.ntfy_topic_url or '' }}" placeholder="https://ntfy.sh/your-topic-name">
-        <span class="hint">Install the ntfy app and subscribe to a topic only you know, then paste its URL here. Leave blank to disable notifications (matches still show up on the My Matches page).</span>
+        <div class="input-with-button">
+          <input type="text" id="ntfy_topic_url" name="ntfy_topic_url" value="{{ session.ntfy_topic_url or '' }}" placeholder="https://ntfy.sh/your-topic-name">
+          <button type="button" class="secondary" onclick="generateNtfyTopic('ntfy_topic_url')">Generate</button>
+        </div>
+        <span class="hint">Install the ntfy app and subscribe to this topic, then save it here. "Generate" fills in a random, hard-to-guess one - anyone who knows the topic name can read your notifications, so avoid something short/guessable. Leave blank to disable notifications (matches still show up on the My Matches page).</span>
       </div>
     </div>
     <button class="primary" type="submit">Save</button>
