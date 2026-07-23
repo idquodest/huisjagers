@@ -188,6 +188,10 @@ def get_active_users(conn: sqlite3.Connection) -> list[sqlite3.Row]:
     return conn.execute("SELECT * FROM users WHERE is_active = 1").fetchall()
 
 
+def update_user_ntfy_topic(conn: sqlite3.Connection, user_id: int, ntfy_topic_url: str | None) -> None:
+    conn.execute("UPDATE users SET ntfy_topic_url = ? WHERE id = ?", (ntfy_topic_url, user_id))
+
+
 def create_session(
     conn: sqlite3.Connection, token: str, user_id: int, csrf_token: str,
     now_iso: str, expires_at_iso: str,

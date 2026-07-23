@@ -4,6 +4,21 @@
 <h1>Preferences</h1>
 <p class="subtitle">Set your filters per city. Leave a city's price/size fields blank to not restrict on that field. Saving enables matching/notifications for that city.</p>
 
+<div class="card">
+  <h2>Notifications</h2>
+  <form method="post" action="/account/ntfy-topic">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <div class="field-row">
+      <div class="field">
+        <label for="ntfy_topic_url">ntfy topic URL</label>
+        <input type="text" id="ntfy_topic_url" name="ntfy_topic_url" value="{{ session.ntfy_topic_url or '' }}" placeholder="https://ntfy.sh/your-topic-name">
+        <span class="hint">Install the ntfy app and subscribe to a topic only you know, then paste its URL here. Leave blank to disable notifications (matches still show up on the My Matches page).</span>
+      </div>
+    </div>
+    <button class="primary" type="submit">Save</button>
+  </form>
+</div>
+
 {% for city in cities %}
   {% set p = existing.get(city.key, {}) %}
   <div class="card">

@@ -129,6 +129,21 @@ def preferences_form(request: Request):
     )
 
 
+@app.post("/account/ntfy-topic")
+def update_ntfy_topic(request: Request, csrf_token: str = Form(...), ntfy_topic_url: str = Form("")):
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        if session is None:
+            return RedirectResponse("/login", status_code=303)
+        if not auth.check_csrf(request, session, csrf_token):
+            return RedirectResponse("/preferences", status_code=303)
+
+        db.update_user_ntfy_topic(conn, session["user_id"], ntfy_topic_url.strip() or None)
+        conn.commit()
+
+    return RedirectResponse("/preferences", status_code=303)
+
+
 @app.post("/preferences/{city_key}")
 def preferences_submit(
     request: Request, city_key: str,
