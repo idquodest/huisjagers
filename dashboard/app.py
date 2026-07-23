@@ -12,6 +12,7 @@ from fastapi.templating import Jinja2Templates
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import auth  # noqa: E402
 import db  # noqa: E402
+from matcher import matches  # noqa: E402
 from run import load_config  # noqa: E402
 
 app = FastAPI(title="Huisjagers")
@@ -180,6 +181,16 @@ def preferences_submit(
         }
         now_iso = datetime.now(timezone.utc).isoformat()
         db.upsert_user_preferences(conn, session["user_id"], city_key, prefs, now_iso)
+        conn.commit()
+
+        # Re-evaluate every already-scraped listing in this city against the
+        # new preferences right away, so My Matches reflects the change
+        # immediately instead of only picking up listings scraped from now
+        # on. Only touches matched/matched_at (see upsert_user_match_flag) -
+        # never re-notifies for something already sent.
+        for row in db.get_listings(conn, city_key):
+            listing = db.row_to_listing(row)
+            db.upsert_user_match_flag(conn, session["user_id"], listing.id, matches(listing, prefs), now_iso)
         conn.commit()
 
     return RedirectResponse("/preferences", status_code=303)

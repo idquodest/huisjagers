@@ -288,6 +288,25 @@ def get_unprocessed_listings_for_user(conn: sqlite3.Connection, user_id: int, ci
     ).fetchall()
 
 
+def upsert_user_match_flag(conn: sqlite3.Connection, user_id: int, listing_id: str, matched: bool, now_iso: str) -> None:
+    """Like mark_user_match_status, but only ever touches matched/matched_at,
+    never notified/notified_at. Used when a user edits their preferences:
+    every already-scraped listing in that city needs re-evaluating so the
+    My Matches page reflects the new preferences immediately, but that must
+    never re-trigger a notification for something already sent - changing
+    a filter isn't a new listing arriving."""
+    conn.execute(
+        """
+        INSERT INTO user_listing_status (user_id, listing_id, matched, notified, matched_at, notified_at)
+        VALUES (?, ?, ?, 0, ?, NULL)
+        ON CONFLICT(user_id, listing_id) DO UPDATE SET
+            matched = excluded.matched,
+            matched_at = excluded.matched_at
+        """,
+        (user_id, listing_id, int(matched), now_iso if matched else None),
+    )
+
+
 def mark_user_match_status(
     conn: sqlite3.Connection, user_id: int, listing_id: str, matched: bool, notified: bool, now_iso: str,
 ) -> None:
