@@ -13,19 +13,19 @@ def matches(listing: Listing, preferences: dict) -> bool:
     if price_max is not None and price > price_max:
         return False
 
+    # Permissive on missing data, same as sqft below: a lot of sources
+    # don't expose bedroom/bathroom counts at all (e.g. rebogroep only
+    # gives a total room count), so treating "unknown" as a rejection
+    # would silently hide real listings rather than just showing them
+    # without that detail.
     beds_min = preferences.get("beds_min")
-    if beds_min is not None:
-        if listing.beds is None or listing.beds < beds_min:
-            return False
+    if beds_min is not None and listing.beds is not None and listing.beds < beds_min:
+        return False
 
     baths_min = preferences.get("baths_min")
-    if baths_min is not None:
-        if listing.baths is None or listing.baths < baths_min:
-            return False
+    if baths_min is not None and listing.baths is not None and listing.baths < baths_min:
+        return False
 
-    # Deliberately asymmetric with beds/baths above: size data is spotty
-    # across sources, so a listing with unknown sqft is still allowed
-    # through rather than silently dropped.
     sqft_min = preferences.get("sqft_min")
     if sqft_min is not None and listing.sqft is not None and listing.sqft < sqft_min:
         return False
