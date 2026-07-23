@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Preferences - Huisjagers{% endblock %}
+{% block content %}
+<h1>Preferences</h1>
+<p class="subtitle">Set your filters per city. Leave a city's price/size fields blank to not restrict on that field. Saving enables matching/notifications for that city.</p>
+
+{% for city in cities %}
+  {% set p = existing.get(city.key, {}) %}
+  <div class="card">
+    <h2>{{ city.name }}</h2>
+    <form method="post" action="/preferences/{{ city.key }}">
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+      <div class="field-row">
+        <div class="field">
+          <label>Price min (€)</label>
+          <input type="number" name="price_min" value="{{ p.price_min if p.price_min is not none else '' }}">
+        </div>
+        <div class="field">
+          <label>Price max (€)</label>
+          <input type="number" name="price_max" value="{{ p.price_max if p.price_max is not none else '' }}">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Bedrooms min</label>
+          <input type="number" name="beds_min" value="{{ p.beds_min if p.beds_min is not none else '' }}">
+        </div>
+        <div class="field">
+          <label>Bathrooms min</label>
+          <input type="number" name="baths_min" value="{{ p.baths_min if p.baths_min is not none else '' }}">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Size min (m²)</label>
+          <input type="number" name="sqft_min" value="{{ p.sqft_min if p.sqft_min is not none else '' }}">
+        </div>
+        <div class="field">
+          <label>Size max (m²)</label>
+          <input type="number" name="sqft_max" value="{{ p.sqft_max if p.sqft_max is not none else '' }}">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label><input type="checkbox" name="pet_friendly_required" value="true" {% if p.pet_friendly_required %}checked{% endif %}> Pet-friendly required</label>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Required amenities (one per line)</label>
+          <textarea name="required_amenities">{{ p.required_amenities|join('\n') if p.required_amenities else '' }}</textarea>
+          <span class="hint">A listing must have every amenity listed here.</span>
+        </div>
+        <div class="field">
+          <label>Include keywords (one per line)</label>
+          <textarea name="include_keywords">{{ p.include_keywords|join('\n') if p.include_keywords else '' }}</textarea>
+          <span class="hint">If set, a listing must mention at least one of these (in the address or description).</span>
+        </div>
+        <div class="field">
+          <label>Exclude keywords (one per line)</label>
+          <textarea name="exclude_keywords">{{ p.exclude_keywords|join('\n') if p.exclude_keywords else '' }}</textarea>
+          <span class="hint">A listing mentioning any of these is dropped - e.g. a building name you want to avoid.</span>
+        </div>
+      </div>
+      <button class="primary" type="submit">Save {{ city.name }}</button>
+    </form>
+  </div>
+{% endfor %}
+{% endblock %}

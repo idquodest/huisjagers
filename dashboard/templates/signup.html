@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Sign up - Huisjagers{% endblock %}
+{% block content %}
+<div class="card auth-card">
+  <h2>Sign up</h2>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" action="/signup">
+    <div class="field-row">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autofocus>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required minlength="8">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="ntfy_topic_url">ntfy topic URL</label>
+        <input type="text" id="ntfy_topic_url" name="ntfy_topic_url" placeholder="https://ntfy.sh/your-topic-name">
+        <span class="hint">Where your match notifications get sent. Install the ntfy app and subscribe to a topic only you know, then paste its URL here. Can be added later from Preferences.</span>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="invite_code">Invite code</label>
+        <input type="text" id="invite_code" name="invite_code" required>
+      </div>
+    </div>
+    <button class="primary" type="submit">Sign up</button>
+  </form>
+  <p class="hint">Already have an account? <a href="/login">Log in</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Log in - Huisjagers{% endblock %}
+{% block content %}
+<div class="card auth-card">
+  <h2>Log in</h2>
+  {% if error %}<div class="error">{{ error }}</div>{% endif %}
+  <form method="post" action="/login">
+    <div class="field-row">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autofocus>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+    </div>
+    <button class="primary" type="submit">Log in</button>
+  </form>
+  <p class="hint">No account? <a href="/signup">Sign up</a></p>
+</div>
+{% endblock %}

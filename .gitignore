@@ -1,0 +1,8 @@
+venv/
+*.db
+*.db-wal
+*.db-shm
+*.log
+__pycache__/
+*.pyc
+.run.lock

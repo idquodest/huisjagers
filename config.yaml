@@ -1,0 +1,383 @@
+# Huisjagers config
+# Forked from apartment-finder's config.yaml. Cities/sources are shared/
+# admin-configured (scraping runs once for everyone) - per-user price/size/
+# keyword preferences live in the database instead (see db.py
+# user_city_preferences), set via the /preferences page, not here.
+
+polling:
+  interval_minutes: 20
+
+database:
+  path: "huisjagers.db"
+
+cities:
+  utrecht:
+    name: "Utrecht"
+    sources:
+      # rebogroep.nl is a Nuxt/Vue single-page app - listings aren't in the
+      # raw HTML, so this uses the headless-browser `playwright_site`
+      # scraper instead of `generic_css`. Prices are Dutch-formatted
+      # ("€ 1.515" = fifteen hundred fifteen euros), hence decimal_comma.
+      - name: "rebogroep"
+        type: "playwright_site"
+        url: "https://www.rebogroep.nl/nl/particulier/ons-aanbod/huren"
+        decimal_comma: true
+        # This page lists rentals across many Dutch cities (Rotterdam,
+        # Amsterdam, Eindhoven, etc.) - the "Plaats" dropdown filters to one
+        # city, but it's client-side state, not a URL param, so the scraper
+        # has to click it rather than just requesting a filtered URL.
+        ui_filters:
+          - trigger_text: "Plaats"
+            option_text: "Utrecht"
+        # Safety net in case the UI filter above ever fails silently.
+        city_filter: ["Utrecht"]
+        selectors:
+          listing: "a.object-card"
+          # Excludes any card whose full text mentions these - a global,
+          # scrape-time filter for things that aren't real rentals at all
+          # (junk/spam listings), not personal taste - that's what each
+          # user's own exclude_keywords preference is for.
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          # Word-boundary keyword scan of the full card text (and, for
+          # rebogroep, the listing's own detail page too, since it's
+          # already fetched for parking). Any match gets appended to
+          # amenities. Includes Dutch equivalents (kaal/gestoffeerd/
+          # gemeubileerd/ongemeubileerd) alongside the English terms.
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: ".location h5"
+          city: ".location .value"
+          price: "h6.price"
+          # Label-based, not positional: the icon order (Woonopp/Kamers/
+          # Bouwjaar) isn't consistent across cards, so nth-child picked up
+          # build years as "beds" on some listings.
+          beds: 'div.mobileHideLabel:has(span.label:-soup-contains("Kamers")) span.value'
+          sqft: 'div.mobileHideLabel:has(span.label:-soup-contains("Woonopp")) span.value'
+        # Parking isn't on the summary card, only each listing's own page -
+        # this costs one extra page load per listing during scraping.
+        detail_amenities:
+          - selector: 'li.listItem:has(div.label:-soup-contains("Parkeerfaciliteiten")) div.value'
+            label: "parking"
+
+      # pararius.com is behind a Cloudflare bot-challenge (blocks plain HTTP
+      # requests) and also JS-rendered, so it needs playwright_site too.
+      # The city filter is a real URL path segment (server-side).
+      #
+      # Only page 1 is scraped (page-N URLs technically exist, but direct
+      # navigation to them just re-serves page 1's content - the page
+      # number lives in client-side router state). This is fine given how
+      # the app is used: default sort is "Newest first", and polling runs
+      # every polling.interval_minutes, so any new listing shows up on page
+      # 1 long before enough newer ones could push it off.
+      - name: "pararius"
+        type: "playwright_site"
+        url: "https://www.pararius.com/apartments/utrecht"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+
+      # huurwoningen.nl is the same underlying platform as pararius (Pararius
+      # Group) - identical markup/class names, same Cloudflare challenge
+      # that clears fine for a real browser, same "Newest first" default
+      # sort, same reasoning for only scraping page 1.
+      - name: "huurwoningen"
+        type: "playwright_site"
+        url: "https://www.huurwoningen.nl/en/in/utrecht/"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+
+      # ikwilhuren.nu is plain static HTML (generic_css works, no browser
+      # needed) but - like rebogroep - lists rentals nationwide with no
+      # server-side city filter, so city_filter + pagination both apply.
+      # Its "beds" field is genuinely bedroom count ("slaapkamers"), not a
+      # total-room proxy like rebogroep's.
+      - name: "ikwilhuren"
+        type: "generic_css"
+        url: "https://ikwilhuren.nu/aanbod/"
+        page_url_pattern: "{url}?page={page}"
+        max_pages: 25
+        # Dutch price format ("1.225,-" = twelve-twenty-five euros, no
+        # cents) - dot thousands separator, comma decimal.
+        decimal_comma: true
+        city_filter: ["utrecht"]
+        selectors:
+          listing: "div.card-woning"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: ".card-title a"
+          city: ".card-title + span"
+          price: ".dotted-spans span.fw-bold"
+          # Content-based, not positional: some cards omit sqft, others
+          # omit beds. The sqft span uniquely has a nested <sup> (for the
+          # m² superscript); beds always says "slaapkamer".
+          sqft: ".dotted-spans > span:has(sup)"
+          beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
+          link: ".card-title a"
+
+      # nederwoon.nl is plain static HTML (generic_css). The search form
+      # posts to /search?city=<name>&search_type=1 (1 = Huurwoning/rental).
+      # No pagination link appeared for any of the 3 cities (all under 5
+      # results), so none is configured.
+      - name: "nederwoon"
+        type: "generic_css"
+        url: "https://www.nederwoon.nl/search?city=Utrecht&search_type=1"
+        decimal_comma: true
+        # No city_filter here on purpose: nederwoon's search is a "nearby
+        # area" search, not a strict city match (e.g. a "Hilversum" search
+        # returns Naarden listings) - keep those nearby results rather than
+        # drop them.
+        selectors:
+          listing: "div.location"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          address: "a.see-page-button"
+          city: "p.color-medium.fixed-lh"
+          price: "p.heading-md"
+          sqft: 'li:-soup-contains("Woonoppervlakte")'
+          # "kamers" here is total room count like rebogroep, not bedrooms
+          # specifically.
+          beds: 'li:-soup-contains("kamer")'
+          link: "a.see-page-button"
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+
+      # hurenbij.bpdwoningfonds.nl is plain static HTML (generic_css). It
+      # lists rentals nationwide with no URL-based city search - the site's
+      # own filter is a JS-driven location+radius picker, not a simple
+      # query param - so city_filter is the primary filter here, not just a
+      # safety net. No pagination: all results are on one page regardless
+      # of city.
+      - name: "bpdwoningfonds"
+        type: "generic_css"
+        url: "https://hurenbij.bpdwoningfonds.nl/aanbod/"
+        # Dutch price format ("991,-" = no cents, "1.233,-" = twelve-
+        # thirty-three euros) - dot thousands separator, comma decimal.
+        decimal_comma: true
+        city_filter: ["utrecht"]
+        selectors:
+          listing: "div.card.card-result-list"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: "h5.card-title a"
+          city: ".card-text"
+          price: ".object-price .value"
+          beds: ".object-rooms .value"
+          sqft: ".object-area .value"
+          link: "h5.card-title a"
+
+  amersfoort:
+    name: "Amersfoort"
+    sources:
+      - name: "rebogroep"
+        type: "playwright_site"
+        url: "https://www.rebogroep.nl/nl/particulier/ons-aanbod/huren"
+        decimal_comma: true
+        ui_filters:
+          - trigger_text: "Plaats"
+            option_text: "Amersfoort"
+        city_filter: ["Amersfoort"]
+        selectors:
+          listing: "a.object-card"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: ".location h5"
+          city: ".location .value"
+          price: "h6.price"
+          beds: 'div.mobileHideLabel:has(span.label:-soup-contains("Kamers")) span.value'
+          sqft: 'div.mobileHideLabel:has(span.label:-soup-contains("Woonopp")) span.value'
+        detail_amenities:
+          - selector: 'li.listItem:has(div.label:-soup-contains("Parkeerfaciliteiten")) div.value'
+            label: "parking"
+
+      - name: "pararius"
+        type: "playwright_site"
+        url: "https://www.pararius.com/apartments/amersfoort"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+
+      - name: "huurwoningen"
+        type: "playwright_site"
+        url: "https://www.huurwoningen.nl/en/in/amersfoort/"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+
+      - name: "ikwilhuren"
+        type: "generic_css"
+        url: "https://ikwilhuren.nu/aanbod/"
+        page_url_pattern: "{url}?page={page}"
+        max_pages: 25
+        decimal_comma: true
+        city_filter: ["amersfoort"]
+        selectors:
+          listing: "div.card-woning"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: ".card-title a"
+          city: ".card-title + span"
+          price: ".dotted-spans span.fw-bold"
+          sqft: ".dotted-spans > span:has(sup)"
+          beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
+          link: ".card-title a"
+
+      - name: "nederwoon"
+        type: "generic_css"
+        url: "https://www.nederwoon.nl/search?city=Amersfoort&search_type=1"
+        decimal_comma: true
+        selectors:
+          listing: "div.location"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          address: "a.see-page-button"
+          city: "p.color-medium.fixed-lh"
+          price: "p.heading-md"
+          sqft: 'li:-soup-contains("Woonoppervlakte")'
+          beds: 'li:-soup-contains("kamer")'
+          link: "a.see-page-button"
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+
+      - name: "bpdwoningfonds"
+        type: "generic_css"
+        url: "https://hurenbij.bpdwoningfonds.nl/aanbod/"
+        decimal_comma: true
+        city_filter: ["amersfoort"]
+        selectors:
+          listing: "div.card.card-result-list"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: "h5.card-title a"
+          city: ".card-text"
+          price: ".object-price .value"
+          beds: ".object-rooms .value"
+          sqft: ".object-area .value"
+          link: "h5.card-title a"
+
+  hilversum:
+    name: "Hilversum"
+    sources:
+      - name: "rebogroep"
+        type: "playwright_site"
+        url: "https://www.rebogroep.nl/nl/particulier/ons-aanbod/huren"
+        decimal_comma: true
+        ui_filters:
+          - trigger_text: "Plaats"
+            option_text: "Hilversum"
+        city_filter: ["Hilversum"]
+        selectors:
+          listing: "a.object-card"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: ".location h5"
+          city: ".location .value"
+          price: "h6.price"
+          beds: 'div.mobileHideLabel:has(span.label:-soup-contains("Kamers")) span.value'
+          sqft: 'div.mobileHideLabel:has(span.label:-soup-contains("Woonopp")) span.value'
+        detail_amenities:
+          - selector: 'li.listItem:has(div.label:-soup-contains("Parkeerfaciliteiten")) div.value'
+            label: "parking"
+
+      - name: "pararius"
+        type: "playwright_site"
+        url: "https://www.pararius.com/apartments/hilversum"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+
+      - name: "huurwoningen"
+        type: "playwright_site"
+        url: "https://www.huurwoningen.nl/en/in/hilversum/"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+
+      - name: "ikwilhuren"
+        type: "generic_css"
+        url: "https://ikwilhuren.nu/aanbod/"
+        page_url_pattern: "{url}?page={page}"
+        max_pages: 25
+        decimal_comma: true
+        city_filter: ["hilversum"]
+        selectors:
+          listing: "div.card-woning"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: ".card-title a"
+          city: ".card-title + span"
+          price: ".dotted-spans span.fw-bold"
+          sqft: ".dotted-spans > span:has(sup)"
+          beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
+          link: ".card-title a"
+
+      # No city_filter: nederwoon's search is a "nearby area" search - a
+      # "Hilversum" search here actually returns Naarden listings, kept
+      # intentionally.
+      - name: "nederwoon"
+        type: "generic_css"
+        url: "https://www.nederwoon.nl/search?city=Hilversum&search_type=1"
+        decimal_comma: true
+        selectors:
+          listing: "div.location"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          address: "a.see-page-button"
+          city: "p.color-medium.fixed-lh"
+          price: "p.heading-md"
+          sqft: 'li:-soup-contains("Woonoppervlakte")'
+          beds: 'li:-soup-contains("kamer")'
+          link: "a.see-page-button"
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+
+      - name: "bpdwoningfonds"
+        type: "generic_css"
+        url: "https://hurenbij.bpdwoningfonds.nl/aanbod/"
+        decimal_comma: true
+        city_filter: ["hilversum"]
+        selectors:
+          listing: "div.card.card-result-list"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          address: "h5.card-title a"
+          city: ".card-text"
+          price: ".object-price .value"
+          beds: ".object-rooms .value"
+          sqft: ".object-area .value"
+          link: "h5.card-title a"

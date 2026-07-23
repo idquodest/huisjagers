@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Huisjagers{% endblock %}</title>
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <meta name="theme-color" content="#2952a3">
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f7f7f8; color: #1a1a1a; }
+    .page { max-width: 960px; margin: 0 auto; padding: 1rem 1.25rem 3rem; }
+    h1 { margin-bottom: 0.25rem; }
+    .subtitle { color: #666; margin-top: 0; }
+    nav.topbar { background: #2952a3; color: white; }
+    nav.topbar .inner { max-width: 960px; margin: 0 auto; padding: 0.75rem 1.25rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+    nav.topbar a { color: white; text-decoration: none; font-size: 0.95rem; }
+    nav.topbar a:hover { text-decoration: underline; }
+    nav.topbar .brand { font-weight: 700; margin-right: auto; }
+    nav.topbar form { margin: 0; }
+    nav.topbar button.link { background: none; border: none; color: white; font: inherit; cursor: pointer; padding: 0; text-decoration: none; }
+    nav.topbar button.link:hover { text-decoration: underline; }
+    form.filters { margin: 1rem 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    th { background: #efefef; position: sticky; top: 0; }
+    tr.matched { background: #eaffea; }
+    .amenities { color: #555; font-size: 0.8rem; }
+    a.listing-link { color: #2952a3; text-decoration: none; }
+    a.listing-link:hover { text-decoration: underline; }
+    .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 1rem; font-size: 0.75rem; }
+    .badge.match { background: #2e7d32; color: white; }
+    .badge.pet { background: #6a4fb0; color: white; }
+    .card { background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.25rem; margin: 1rem 0; }
+    .card h2 { margin-top: 0; }
+    .field-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .field { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 140px; }
+    label { font-size: 0.85rem; color: #444; }
+    input[type=text], input[type=email], input[type=password], input[type=number], textarea {
+      padding: 0.4rem 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem; font: inherit;
+    }
+    textarea { min-height: 4rem; resize: vertical; }
+    button.primary, input[type=submit] {
+      background: #2952a3; color: white; border: none; border-radius: 0.25rem;
+      padding: 0.5rem 1rem; font: inherit; cursor: pointer;
+    }
+    button.primary:hover, input[type=submit]:hover { background: #1f3f80; }
+    .error { color: #b3261e; background: #fdecea; border: 1px solid #f5c6c2; border-radius: 0.25rem; padding: 0.5rem 0.75rem; margin-bottom: 1rem; }
+    .hint { color: #777; font-size: 0.8rem; }
+    .auth-card { max-width: 380px; margin: 3rem auto; }
+    @media (max-width: 600px) {
+      table, thead, tbody, tr { display: block; }
+      thead { display: none; }
+      tr { margin-bottom: 0.75rem; border-bottom: 2px solid #ddd; }
+      td { display: flex; justify-content: space-between; gap: 1rem; border-bottom: none; }
+      td::before { content: attr(data-label); font-weight: 600; color: #555; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="topbar">
+    <div class="inner">
+      <span class="brand">Huisjagers</span>
+      {% if session %}
+        <a href="/">My Matches</a>
+        <a href="/preferences">Preferences</a>
+        <form method="post" action="/logout">
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+          <button class="link" type="submit">Logout ({{ session.email }})</button>
+        </form>
+      {% else %}
+        <a href="/login">Login</a>
+        <a href="/signup">Sign up</a>
+      {% endif %}
+    </div>
+  </nav>
+  <div class="page">
+    {% block content %}{% endblock %}
+  </div>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/static/sw.js');
+    }
+  </script>
+</body>
+</html>

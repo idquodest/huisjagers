@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}My Matches - Huisjagers{% endblock %}
+{% block content %}
+<h1>My Matches</h1>
+<p class="subtitle">{{ listings|length }} matched listings{% if selected_city %} in {{ cities.get(selected_city, selected_city) }}{% endif %}</p>
+
+<form class="filters" method="get">
+  <label for="city">City:</label>
+  <select name="city" id="city" onchange="this.form.submit()">
+    <option value="">All cities</option>
+    {% for key, name in cities.items() %}
+      <option value="{{ key }}" {% if key == selected_city %}selected{% endif %}>{{ name }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+{% if listings|length == 0 %}
+  <p class="hint">No matches yet. Check your <a href="/preferences">preferences</a> are set for the cities you're interested in - matches show up here as new listings come in.</p>
+{% endif %}
+
+<table>
+  <thead>
+    <tr>
+      <th>Address</th>
+      <th>Price</th>
+      <th>Rooms/Baths</th>
+      <th>m²</th>
+      <th>Source</th>
+      <th>Amenities</th>
+      <th>First Seen</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for l in listings %}
+    <tr class="matched">
+      <td data-label="Address">{{ l.address }}</td>
+      <td data-label="Price">{{ '€%.0f'|format(l.price) if l.price is not none else '-' }}</td>
+      <td data-label="Rooms/Baths">{{ (l.beds ~ ' Rooms') if l.beds is not none else 'Rooms n/a' }} / {{ (l.baths ~ ' Bath') if l.baths is not none else 'Baths n/a' }}</td>
+      <td data-label="m²">{{ l.sqft|int if l.sqft else '-' }}</td>
+      <td data-label="Source">{{ l.source }}</td>
+      <td data-label="Amenities" class="amenities">
+        {{ l.amenities|join(', ') }}
+        {% if l.pet_friendly %}<span class="badge pet">pet-friendly</span>{% endif %}
+      </td>
+      <td data-label="First Seen">{{ l.first_seen }}</td>
+      <td data-label="">
+        <a class="listing-link" href="{{ l.url }}" target="_blank" rel="noopener">view</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
