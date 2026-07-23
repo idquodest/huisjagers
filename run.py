@@ -43,6 +43,12 @@ def scrape_phase(config: dict, conn, now_iso: str) -> None:
             logger.info("Fetched %d listings from %s (%s)", len(listings), source_name, city_name)
             for listing in listings:
                 db.upsert_listing(conn, listing, now_iso)
+            # Commit per source, not once at the end of the whole scrape -
+            # a single multi-minute transaction would hold SQLite's one
+            # writer slot (even in WAL mode) the entire time, blocking the
+            # dashboard's own writes (signup, preferences) for that whole
+            # window instead of just for a moment.
+            conn.commit()
 
 
 def match_phase(config: dict, conn, now_iso: str) -> tuple[int, int]:
@@ -79,6 +85,11 @@ def match_phase(config: dict, conn, now_iso: str) -> tuple[int, int]:
                             notified_count += 1
 
                 db.mark_user_match_status(conn, user["id"], listing.id, is_match, notified, now_iso)
+
+        # Commit per user, same reasoning as scrape_phase's per-source
+        # commits - don't hold the write lock across every user's entire
+        # backlog evaluation.
+        conn.commit()
 
     return matched_count, notified_count
 
