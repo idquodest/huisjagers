@@ -34,6 +34,9 @@ disables the `secure` cookie flag for local HTTP testing (defaults to
   `playwright_site` for JS-rendered/Cloudflare-protected sites).
 - `run.py` - scrape phase (shared) + per-user match phase.
 - `matcher.py` - per-user preference matching, including keyword filters.
-- `auth.py` / `db.py` - accounts, sessions, preferences, match tracking.
-- `dashboard/` - FastAPI app: signup/login/preferences/my-matches pages,
-  PWA manifest + service worker.
+- `auth.py` / `db.py` - accounts, sessions, saved notification preferences,
+  notifier bookkeeping.
+- `dashboard/` - FastAPI app: signup/login/account pages, and My Matches -
+  a live filter/browse page over the shared listing pool, with a "Save as
+  my notification filters" action that's the only thing feeding the 20-min
+  notifier. PWA manifest + service worker.

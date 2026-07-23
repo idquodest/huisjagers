@@ -2,7 +2,7 @@
 # Forked from apartment-finder's config.yaml. Cities/sources are shared/
 # admin-configured (scraping runs once for everyone) - per-user price/size/
 # keyword preferences live in the database instead (see db.py
-# user_city_preferences), set via the /preferences page, not here.
+# user_city_preferences), set via the My Matches page's filter bar, not here.
 
 polling:
   interval_minutes: 20

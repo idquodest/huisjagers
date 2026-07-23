@@ -271,7 +271,9 @@ def preferences_row_to_dict(row: sqlite3.Row) -> dict:
     }
 
 
-# --- per-user match/notification status ---------------------------------------
+# --- notifier bookkeeping (run.py only - the dashboard filters listings
+# live against saved/query preferences instead of reading stored match
+# state, so nothing here is read by dashboard/app.py) ------------------------
 
 def get_unprocessed_listings_for_user(conn: sqlite3.Connection, user_id: int, city_key: str) -> list[sqlite3.Row]:
     # Anti-join, not a timestamp cursor: "listings this user has never been
@@ -288,25 +290,6 @@ def get_unprocessed_listings_for_user(conn: sqlite3.Connection, user_id: int, ci
     ).fetchall()
 
 
-def upsert_user_match_flag(conn: sqlite3.Connection, user_id: int, listing_id: str, matched: bool, now_iso: str) -> None:
-    """Like mark_user_match_status, but only ever touches matched/matched_at,
-    never notified/notified_at. Used when a user edits their preferences:
-    every already-scraped listing in that city needs re-evaluating so the
-    My Matches page reflects the new preferences immediately, but that must
-    never re-trigger a notification for something already sent - changing
-    a filter isn't a new listing arriving."""
-    conn.execute(
-        """
-        INSERT INTO user_listing_status (user_id, listing_id, matched, notified, matched_at, notified_at)
-        VALUES (?, ?, ?, 0, ?, NULL)
-        ON CONFLICT(user_id, listing_id) DO UPDATE SET
-            matched = excluded.matched,
-            matched_at = excluded.matched_at
-        """,
-        (user_id, listing_id, int(matched), now_iso if matched else None),
-    )
-
-
 def mark_user_match_status(
     conn: sqlite3.Connection, user_id: int, listing_id: str, matched: bool, notified: bool, now_iso: str,
 ) -> None:
@@ -320,19 +303,3 @@ def mark_user_match_status(
             now_iso if matched else None, now_iso if notified else None,
         ),
     )
-
-
-def get_user_matched_listings(conn: sqlite3.Connection, user_id: int, city_key: str | None = None) -> list[sqlite3.Row]:
-    query = """
-        SELECT listings.*, user_listing_status.matched, user_listing_status.notified,
-               user_listing_status.matched_at
-        FROM user_listing_status
-        JOIN listings ON listings.id = user_listing_status.listing_id
-        WHERE user_listing_status.user_id = ? AND user_listing_status.matched = 1
-    """
-    params: list = [user_id]
-    if city_key:
-        query += " AND listings.city_key = ?"
-        params.append(city_key)
-    query += " ORDER BY listings.first_seen DESC"
-    return conn.execute(query, params).fetchall()

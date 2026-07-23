@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Account - Huisjagers{% endblock %}
+{% block content %}
+<h1>Account</h1>
+<p class="subtitle">City filters live on the <a href="/">My Matches</a> page now - this is just where your notification destination lives.</p>
+
+<div class="card">
+  <h2>Notifications</h2>
+  <form method="post" action="/account/ntfy-topic">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <div class="field-row">
+      <div class="field">
+        <label for="ntfy_topic_url">ntfy topic URL</label>
+        <div class="input-with-button">
+          <input type="text" id="ntfy_topic_url" name="ntfy_topic_url" value="{{ session.ntfy_topic_url or '' }}" placeholder="https://ntfy.sh/your-topic-name">
+          <button type="button" class="secondary" onclick="generateNtfyTopic('ntfy_topic_url')">Generate</button>
+        </div>
+        <span class="hint">Install the ntfy app and subscribe to this topic, then save it here. "Generate" fills in a random, hard-to-guess one - anyone who knows the topic name can read your notifications, so avoid something short/guessable. Leave blank to disable notifications (matches still show up on the My Matches page).</span>
+      </div>
+    </div>
+    <button class="primary" type="submit">Save</button>
+  </form>
+</div>
+{% endblock %}

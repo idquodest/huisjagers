@@ -2,7 +2,7 @@
 {% block title %}My Matches - Huisjagers{% endblock %}
 {% block content %}
 <h1>My Matches</h1>
-<p class="subtitle">{{ listings|length }} matched listings{% if selected_city %} in {{ cities.get(selected_city, selected_city) }}{% endif %}</p>
+<p class="subtitle">{{ listings|length }} matching listings{% if selected_city %} in {{ cities.get(selected_city, selected_city) }}{% endif %}</p>
 
 <form class="filters" method="get">
   <label for="city">City:</label>
@@ -14,8 +14,77 @@
   </select>
 </form>
 
+{% if selected_city %}
+<div class="filter-panel">
+  <form method="get" action="/">
+    <input type="hidden" name="city" value="{{ selected_city }}">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <div class="filter-row">
+      <div class="field">
+        <label>Price min (€)</label>
+        <input type="number" name="price_min" value="{{ filters.price_min if filters and filters.price_min is not none else '' }}">
+      </div>
+      <div class="field">
+        <label>Price max (€)</label>
+        <input type="number" name="price_max" value="{{ filters.price_max if filters and filters.price_max is not none else '' }}">
+      </div>
+      <div class="field">
+        <label>Bedrooms min</label>
+        <input type="number" name="beds_min" value="{{ filters.beds_min if filters and filters.beds_min is not none else '' }}">
+      </div>
+      <div class="field">
+        <label>Bathrooms min</label>
+        <input type="number" name="baths_min" value="{{ filters.baths_min if filters and filters.baths_min is not none else '' }}">
+      </div>
+      <div class="field">
+        <label>Size min (m²)</label>
+        <input type="number" name="sqft_min" value="{{ filters.sqft_min if filters and filters.sqft_min is not none else '' }}">
+      </div>
+      <div class="field">
+        <label>Size max (m²)</label>
+        <input type="number" name="sqft_max" value="{{ filters.sqft_max if filters and filters.sqft_max is not none else '' }}">
+      </div>
+      <div class="field field-checkbox">
+        <label><input type="checkbox" name="pet_friendly_required" value="true" {% if filters and filters.pet_friendly_required %}checked{% endif %}> Pet-friendly</label>
+      </div>
+    </div>
+    <details {% if filters and (filters.required_amenities or filters.include_keywords or filters.exclude_keywords) %}open{% endif %}>
+      <summary>More filters (amenities, keywords)</summary>
+      <div class="field-row" style="margin-top: 0.75rem;">
+        <div class="field">
+          <label>Required amenities (one per line)</label>
+          <textarea name="required_amenities">{{ filters.required_amenities|join('\n') if filters and filters.required_amenities else '' }}</textarea>
+        </div>
+        <div class="field">
+          <label>Include keywords (one per line)</label>
+          <textarea name="include_keywords">{{ filters.include_keywords|join('\n') if filters and filters.include_keywords else '' }}</textarea>
+        </div>
+        <div class="field">
+          <label>Exclude keywords (one per line)</label>
+          <textarea name="exclude_keywords">{{ filters.exclude_keywords|join('\n') if filters and filters.exclude_keywords else '' }}</textarea>
+        </div>
+      </div>
+    </details>
+    <div class="filter-actions">
+      <button class="secondary" type="submit">Show results</button>
+      <button class="primary" type="submit" formmethod="post" formaction="/notification-filters/{{ selected_city }}">Save as my notification filters</button>
+    </div>
+  </form>
+
+  {% if filters_are_saved %}
+    <p class="hint filter-status">✓ Showing your saved notification filters for {{ cities.get(selected_city, selected_city) }} - this is what you get pinged about.</p>
+  {% elif saved_summary %}
+    <p class="hint filter-status">You're browsing with different filters than what's saved. Your notifications for {{ cities.get(selected_city, selected_city) }} are still set to €{{ saved_summary.price_min|int if saved_summary.price_min is not none else '-' }}–{{ saved_summary.price_max|int if saved_summary.price_max is not none else '-' }}{% if saved_summary.beds_min %}, {{ saved_summary.beds_min|int }}+ beds{% endif %} until you hit "Save".</p>
+  {% else %}
+    <p class="hint filter-status">You haven't saved notification filters for {{ cities.get(selected_city, selected_city) }} yet, so you won't get pinged for new listings here until you do.</p>
+  {% endif %}
+</div>
+{% else %}
+  <p class="hint">Pick a city above to browse and adjust your filters for it. This "All cities" view shows your saved notification matches across every city you've configured.</p>
+{% endif %}
+
 {% if listings|length == 0 %}
-  <p class="hint">No matches yet. Check your <a href="/preferences">preferences</a> are set for the cities you're interested in - matches show up here as new listings come in.</p>
+  <p class="hint">No matching listings{% if selected_city %} for these filters{% endif %} right now.</p>
 {% endif %}
 
 <table>
@@ -33,7 +102,7 @@
   </thead>
   <tbody>
     {% for l in listings %}
-    <tr class="matched">
+    <tr>
       <td data-label="Address">{{ l.address }}</td>
       <td data-label="Price">{{ '€%.0f'|format(l.price) if l.price is not none else '-' }}</td>
       <td data-label="Rooms/Baths">{{ (l.beds ~ ' Rooms') if l.beds is not none else 'Rooms n/a' }} / {{ (l.baths ~ ' Bath') if l.baths is not none else 'Baths n/a' }}</td>
@@ -45,7 +114,7 @@
       </td>
       <td data-label="First Seen">{{ l.first_seen }}</td>
       <td data-label="">
-        <a class="listing-link" href="{{ l.url }}" target="_blank" rel="noopener">view</a>
+        <a class="listing-link" href="{{ l.url }}" target="_blank" rel="noopener noreferrer">view</a>
       </td>
     </tr>
     {% endfor %}
