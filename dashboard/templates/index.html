@@ -14,7 +14,6 @@
   </select>
 </form>
 
-{% if selected_city %}
 <div class="filter-panel">
   <form method="get" action="/">
     <input type="hidden" name="city" value="{{ selected_city }}">
@@ -69,10 +68,10 @@
       <span class="apply-to-label">Save filters for:</span>
       {% for key, name in cities.items() %}
         <label class="apply-to-option">
-          <input type="checkbox" name="cities" value="{{ key }}" {% if key == selected_city %}checked{% endif %}> {{ name }}
+          <input type="checkbox" name="cities" value="{{ key }}" {% if key == selected_city or not selected_city %}checked{% endif %}> {{ name }}
         </label>
       {% endfor %}
-      <span class="hint">Check more than one if you want the same filters everywhere.</span>
+      <span class="hint">Check more than one if you want the same filters everywhere{% if not selected_city %} - all cities are checked since you're not viewing one in particular{% endif %}.</span>
     </div>
     <div class="filter-actions">
       <button class="secondary" type="submit">Show results</button>
@@ -80,17 +79,18 @@
     </div>
   </form>
 
-  {% if filters_are_saved %}
-    <p class="hint filter-status">✓ Showing your saved notification filters for {{ cities.get(selected_city, selected_city) }} - this is what you get pinged about.</p>
-  {% elif saved_summary %}
-    <p class="hint filter-status">You're browsing with different filters than what's saved. Your notifications for {{ cities.get(selected_city, selected_city) }} are still set to €{{ saved_summary.price_min|int if saved_summary.price_min is not none else '-' }}–{{ saved_summary.price_max|int if saved_summary.price_max is not none else '-' }}{% if saved_summary.beds_min %}, {{ saved_summary.beds_min|int }}+ beds{% endif %} until you hit "Save".</p>
+  {% if selected_city %}
+    {% if filters_are_saved %}
+      <p class="hint filter-status">✓ Showing your saved notification filters for {{ cities.get(selected_city, selected_city) }} - this is what you get pinged about.</p>
+    {% elif saved_summary %}
+      <p class="hint filter-status">You're browsing with different filters than what's saved. Your notifications for {{ cities.get(selected_city, selected_city) }} are still set to €{{ saved_summary.price_min|int if saved_summary.price_min is not none else '-' }}–{{ saved_summary.price_max|int if saved_summary.price_max is not none else '-' }}{% if saved_summary.beds_min %}, {{ saved_summary.beds_min|int }}+ beds{% endif %} until you hit "Save".</p>
+    {% else %}
+      <p class="hint filter-status">You haven't saved notification filters for {{ cities.get(selected_city, selected_city) }} yet, so you won't get pinged for new listings here until you do.</p>
+    {% endif %}
   {% else %}
-    <p class="hint filter-status">You haven't saved notification filters for {{ cities.get(selected_city, selected_city) }} yet, so you won't get pinged for new listings here until you do.</p>
+    <p class="hint filter-status">These filters apply to every city checked below when you save. The results shown right now are either your live "Show results" browse (all cities, same filter) or, if you haven't touched the panel yet, each city's own saved notification matches.</p>
   {% endif %}
 </div>
-{% else %}
-  <p class="hint">Pick a city above to browse and adjust your filters for it. This "All cities" view shows your saved notification matches across every city you've configured.</p>
-{% endif %}
 
 {% if listings|length == 0 %}
   <p class="hint">No matching listings{% if selected_city %} for these filters{% endif %} right now.</p>

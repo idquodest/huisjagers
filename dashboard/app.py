@@ -225,8 +225,7 @@ def index(request: Request, city: str = Query(default="")):
             return RedirectResponse("/login", status_code=303)
 
         matched_rows = []
-        filters = None
-        filters_are_saved = True
+        filters_are_saved = False
         saved_summary = None
 
         if city:
@@ -251,11 +250,21 @@ def index(request: Request, city: str = Query(default="")):
             for row in db.get_listings(conn, city_key=city):
                 if matches(db.row_to_listing(row), filters):
                     matched_rows.append(row)
+        elif form_submitted:
+            # "All cities" with a filter bar actually submitted: apply the
+            # same ad-hoc values across every city's listings, so someone
+            # can compose one universal filter without picking a city first.
+            filters = _prefs_from_getter(qp.get)
+            for city_key in config["cities"]:
+                for row in db.get_listings(conn, city_key=city_key):
+                    if matches(db.row_to_listing(row), filters):
+                        matched_rows.append(row)
         else:
-            # No single city selected: aggregate each city's live matches
-            # against that city's own saved filters (no ad-hoc query
-            # filtering across cities - there's no single filter bar to
-            # apply, since each city can have different saved criteria).
+            # Fresh landing on "All cities": aggregate each city's live
+            # matches against that city's own saved filters (informational
+            # view), but leave the filter panel blank - there's no single
+            # "the" saved filter to prefill when cities can differ.
+            filters = _prefs_from_getter(lambda k, d="": d)
             for city_key in config["cities"]:
                 pref_rows = db.get_user_preferences(conn, session["user_id"], city_key=city_key)
                 if not pref_rows:
@@ -280,7 +289,7 @@ def index(request: Request, city: str = Query(default="")):
         request, "index.html",
         {
             "session": session, "listings": listings, "cities": cities, "selected_city": city,
-            "filters": filters if city else None,
+            "filters": filters,
             "filters_are_saved": filters_are_saved,
             "saved_summary": saved_summary,
         },
