@@ -101,7 +101,8 @@
     <tr>
       <th>Address</th>
       <th>Price</th>
-      <th>Rooms/Baths</th>
+      <th>Rooms</th>
+      <th>Bathrooms</th>
       <th>m²</th>
       <th>Source</th>
       <th>Amenities</th>
@@ -114,11 +115,12 @@
     <tr>
       <td data-label="Address">{{ l.address }}</td>
       <td data-label="Price">{{ '€%.0f'|format(l.price) if l.price is not none else '-' }}</td>
-      <td data-label="Rooms/Baths">{{ (l.beds|int ~ ' Rooms') if l.beds is not none else 'Rooms n/a' }} / {{ (l.baths|int ~ ' Bath') if l.baths is not none else 'Baths n/a' }}</td>
+      <td data-label="Rooms">{{ l.beds|int if l.beds is not none else 'n/a' }}</td>
+      <td data-label="Bathrooms">{{ l.baths|int if l.baths is not none else 'n/a' }}</td>
       <td data-label="m²">{{ l.sqft|int if l.sqft else '-' }}</td>
       <td data-label="Source">{{ l.source }}</td>
       <td data-label="Amenities" class="amenities">
-        {{ l.amenities|join(', ') }}
+        {{ l.amenities|map('title')|join(', ') }}
         {% if l.pet_friendly %}<span class="badge pet">pet-friendly</span>{% endif %}
       </td>
       <td data-label="First Seen">{{ l.first_seen }}</td>
