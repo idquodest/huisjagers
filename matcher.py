@@ -1,6 +1,13 @@
 from models import Listing
 from text_utils import any_keyword_matches
 
+# Some sources (huurwoningen.nl) mix in "house swap" listings alongside
+# normal rentals - you'd need your own place to offer in exchange, which
+# most people using this to find a rental don't have. Detected via the
+# card text itself (e.g. "Home swap" badge), not a per-source scrape-time
+# exclude, since whether to hide them is a per-user choice (default: yes).
+_HOUSE_SWAP_KEYWORDS = ["home swap", "house swap", "woningruil"]
+
 
 def matches(listing: Listing, preferences: dict) -> bool:
     price = listing.price
@@ -48,6 +55,9 @@ def matches(listing: Listing, preferences: dict) -> bool:
     # taste. These search the address plus the full scraped card/detail
     # text, not just structured fields.
     searchable_text = f"{listing.address or ''} {listing.description or ''}"
+
+    if preferences.get("hide_house_swaps", True) and any_keyword_matches(searchable_text, _HOUSE_SWAP_KEYWORDS):
+        return False
 
     exclude_keywords = preferences.get("exclude_keywords") or []
     if exclude_keywords and any_keyword_matches(searchable_text, exclude_keywords):

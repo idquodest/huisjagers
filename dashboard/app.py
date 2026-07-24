@@ -61,11 +61,17 @@ def _lines(s: str) -> list[str]:
     return [line.strip() for line in (s or "").replace(",", "\n").splitlines() if line.strip()]
 
 
-def _prefs_from_getter(get) -> dict:
+def _prefs_from_getter(get, hide_house_swaps_default: bool = False) -> dict:
     """Builds the same preferences-shaped dict matcher.matches() expects,
     from anything with a .get(key, default) - either Starlette's
     request.query_params (live filter bar) or a plain dict of submitted
-    form fields (saving to user_city_preferences)."""
+    form fields (saving to user_city_preferences).
+
+    hide_house_swaps_default only matters for the "nothing submitted,
+    nothing saved" blank state: a real form submission always means
+    "checkbox absent = explicitly unchecked" (False), same as
+    pet_friendly_required, but the blank/fresh-landing state should
+    default to hiding house swaps rather than showing them."""
     return {
         "price_min": _num(get("price_min", "")), "price_max": _num(get("price_max", "")),
         "beds_min": _num(get("beds_min", "")), "baths_min": _num(get("baths_min", "")),
@@ -74,6 +80,7 @@ def _prefs_from_getter(get) -> dict:
         "required_amenities": _lines(get("required_amenities", "")),
         "exclude_keywords": _lines(get("exclude_keywords", "")),
         "include_keywords": _lines(get("include_keywords", "")),
+        "hide_house_swaps": get("hide_house_swaps", "true" if hide_house_swaps_default else "") == "true",
     }
 
 
@@ -229,7 +236,7 @@ def save_notification_filters(
     price_min: str = Form(""), price_max: str = Form(""),
     beds_min: str = Form(""), baths_min: str = Form(""),
     sqft_min: str = Form(""), sqft_max: str = Form(""),
-    pet_friendly_required: bool = Form(False),
+    pet_friendly_required: bool = Form(False), hide_house_swaps: bool = Form(False),
     required_amenities: str = Form(""), exclude_keywords: str = Form(""), include_keywords: str = Form(""),
 ):
     with db.connect(_db_path()) as conn:
@@ -247,6 +254,7 @@ def save_notification_filters(
             "required_amenities": _lines(required_amenities),
             "exclude_keywords": _lines(exclude_keywords),
             "include_keywords": _lines(include_keywords),
+            "hide_house_swaps": hide_house_swaps,
             "enabled": True,
         }
         now_iso = datetime.now(timezone.utc).isoformat()
@@ -266,6 +274,7 @@ def save_notification_filters(
         ("beds_min", beds_min), ("baths_min", baths_min),
         ("sqft_min", sqft_min), ("sqft_max", sqft_max),
         ("pet_friendly_required", "true" if pet_friendly_required else ""),
+        ("hide_house_swaps", "true" if hide_house_swaps else ""),
         ("required_amenities", required_amenities),
         ("exclude_keywords", exclude_keywords), ("include_keywords", include_keywords),
     ]
@@ -300,12 +309,15 @@ def index(request: Request):
             # fields - fall back to that one city's saved preferences.
             selected_cities = requested_cities
             pref_rows = db.get_user_preferences(conn, session["user_id"], city_key=requested_cities[0])
-            filters = db.preferences_row_to_dict(pref_rows[0]) if pref_rows else _prefs_from_getter(lambda k, d="": d)
+            filters = db.preferences_row_to_dict(pref_rows[0]) if pref_rows else _prefs_from_getter(lambda k, d="": d, hide_house_swaps_default=True)
         else:
             # Truly fresh landing on the page: show everything, unfiltered,
             # every city checked - no filtering happens until you ask for it.
+            # House swaps are the one deliberate exception to "unfiltered":
+            # hidden by default everywhere, not just once you've configured
+            # a city, since most people using this don't have a place to swap.
             selected_cities = all_city_keys
-            filters = _prefs_from_getter(lambda k, d="": d)
+            filters = _prefs_from_getter(lambda k, d="": d, hide_house_swaps_default=True)
 
         matched_rows = []
         for city_key in selected_cities:

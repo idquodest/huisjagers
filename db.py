@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS user_city_preferences (
     required_amenities TEXT,
     exclude_keywords TEXT,
     include_keywords TEXT,
+    hide_house_swaps INTEGER NOT NULL DEFAULT 1,
     enabled INTEGER NOT NULL DEFAULT 1,
     updated_at TEXT NOT NULL,
     UNIQUE(user_id, city_key)
@@ -88,9 +89,20 @@ def connect(db_path: str):
         conn.close()
 
 
+def _ensure_column(conn: sqlite3.Connection, table: str, column: str, coltype: str) -> None:
+    """Adds a column to an existing table if it's not already there - lets
+    the schema evolve without a full migration framework. Safe to call on
+    every startup; SQLite's ALTER TABLE ADD COLUMN with a constant DEFAULT
+    also backfills existing rows, not just new ones."""
+    cols = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})")}
+    if column not in cols:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {coltype}")
+
+
 def init_db(db_path: str) -> None:
     with connect(db_path) as conn:
         conn.executescript(SCHEMA)
+        _ensure_column(conn, "user_city_preferences", "hide_house_swaps", "INTEGER NOT NULL DEFAULT 1")
         conn.commit()
 
 
@@ -226,8 +238,8 @@ def upsert_user_preferences(conn: sqlite3.Connection, user_id: int, city_key: st
         INSERT INTO user_city_preferences (
             user_id, city_key, price_min, price_max, beds_min, baths_min, sqft_min, sqft_max,
             pet_friendly_required, required_amenities, exclude_keywords, include_keywords,
-            enabled, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            hide_house_swaps, enabled, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(user_id, city_key) DO UPDATE SET
             price_min=excluded.price_min, price_max=excluded.price_max,
             beds_min=excluded.beds_min, baths_min=excluded.baths_min,
@@ -236,6 +248,7 @@ def upsert_user_preferences(conn: sqlite3.Connection, user_id: int, city_key: st
             required_amenities=excluded.required_amenities,
             exclude_keywords=excluded.exclude_keywords,
             include_keywords=excluded.include_keywords,
+            hide_house_swaps=excluded.hide_house_swaps,
             enabled=excluded.enabled, updated_at=excluded.updated_at
         """,
         (
@@ -245,6 +258,7 @@ def upsert_user_preferences(conn: sqlite3.Connection, user_id: int, city_key: st
             json.dumps(prefs.get("required_amenities", [])),
             json.dumps(prefs.get("exclude_keywords", [])),
             json.dumps(prefs.get("include_keywords", [])),
+            int(prefs.get("hide_house_swaps", True)),
             int(prefs.get("enabled", True)), now_iso,
         ),
     )
@@ -303,6 +317,7 @@ def preferences_row_to_dict(row: sqlite3.Row) -> dict:
         "required_amenities": json.loads(row["required_amenities"] or "[]"),
         "exclude_keywords": json.loads(row["exclude_keywords"] or "[]"),
         "include_keywords": json.loads(row["include_keywords"] or "[]"),
+        "hide_house_swaps": bool(row["hide_house_swaps"]),
     }
 
 

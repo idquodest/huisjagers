@@ -42,6 +42,7 @@
     </div>
     <div class="pet-friendly-row">
       <label><input type="checkbox" name="pet_friendly_required" value="true" {% if filters and filters.pet_friendly_required %}checked{% endif %}> Pet-friendly required{% if saved_summary and saved_summary.pet_friendly_required %} <span class="hint">(saved: yes)</span>{% endif %}</label>
+      <label><input type="checkbox" name="hide_house_swaps" value="true" {% if filters and filters.hide_house_swaps %}checked{% endif %}> Hide house swap listings{% if saved_summary and not saved_summary.hide_house_swaps %} <span class="hint">(saved: off)</span>{% endif %}</label>
     </div>
     <details {% if filters and (filters.required_amenities or filters.include_keywords or filters.exclude_keywords) %}open{% endif %}>
       <summary>More filters (amenities, keywords)</summary>
