@@ -43,7 +43,7 @@ cities:
           # already fetched for parking). Any match gets appended to
           # amenities. Includes Dutch equivalents (kaal/gestoffeerd/
           # gemeubileerd/ongemeubileerd) alongside the English terms.
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: ".location h5"
           city: ".location .value"
           price: "h6.price"
@@ -74,7 +74,7 @@ cities:
         selectors:
           listing: "li.search-list__item--listing"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: ".listing-search-item__title a"
           price: ".listing-search-item__price-main"
           beds: ".illustrated-features__item--number-of-rooms"
@@ -92,7 +92,7 @@ cities:
         selectors:
           listing: "li.search-list__item--listing"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: ".listing-search-item__title a"
           price: ".listing-search-item__price-main"
           beds: ".illustrated-features__item--number-of-rooms"
@@ -117,7 +117,7 @@ cities:
         selectors:
           listing: "div.card-woning"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: ".card-title a"
           city: ".card-title + span"
           price: ".dotted-spans span.fw-bold"
@@ -151,7 +151,7 @@ cities:
           # specifically.
           beds: 'li:-soup-contains("kamer")'
           link: "a.see-page-button"
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
 
       # hurenbij.bpdwoningfonds.nl is plain static HTML (generic_css). It
       # lists rentals nationwide with no URL-based city search - the site's
@@ -169,7 +169,7 @@ cities:
         selectors:
           listing: "div.card.card-result-list"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: "h5.card-title a"
           city: ".card-text"
           price: ".object-price .value"
@@ -191,7 +191,7 @@ cities:
         selectors:
           listing: "a.object-card"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: ".location h5"
           city: ".location .value"
           price: "h6.price"
@@ -207,7 +207,7 @@ cities:
         selectors:
           listing: "li.search-list__item--listing"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: ".listing-search-item__title a"
           price: ".listing-search-item__price-main"
           beds: ".illustrated-features__item--number-of-rooms"
@@ -221,7 +221,7 @@ cities:
         selectors:
           listing: "li.search-list__item--listing"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: ".listing-search-item__title a"
           price: ".listing-search-item__price-main"
           beds: ".illustrated-features__item--number-of-rooms"
@@ -239,7 +239,7 @@ cities:
         selectors:
           listing: "div.card-woning"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: ".card-title a"
           city: ".card-title + span"
           price: ".dotted-spans span.fw-bold"
@@ -260,7 +260,7 @@ cities:
           sqft: 'li:-soup-contains("Woonoppervlakte")'
           beds: 'li:-soup-contains("kamer")'
           link: "a.see-page-button"
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
 
       - name: "bpdwoningfonds"
         type: "generic_css"
@@ -270,7 +270,7 @@ cities:
         selectors:
           listing: "div.card.card-result-list"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: "h5.card-title a"
           city: ".card-text"
           price: ".object-price .value"
@@ -292,7 +292,7 @@ cities:
         selectors:
           listing: "a.object-card"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: ".location h5"
           city: ".location .value"
           price: "h6.price"
@@ -308,7 +308,7 @@ cities:
         selectors:
           listing: "li.search-list__item--listing"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: ".listing-search-item__title a"
           price: ".listing-search-item__price-main"
           beds: ".illustrated-features__item--number-of-rooms"
@@ -322,7 +322,7 @@ cities:
         selectors:
           listing: "li.search-list__item--listing"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: ".listing-search-item__title a"
           price: ".listing-search-item__price-main"
           beds: ".illustrated-features__item--number-of-rooms"
@@ -340,7 +340,7 @@ cities:
         selectors:
           listing: "div.card-woning"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: ".card-title a"
           city: ".card-title + span"
           price: ".dotted-spans span.fw-bold"
@@ -364,7 +364,7 @@ cities:
           sqft: 'li:-soup-contains("Woonoppervlakte")'
           beds: 'li:-soup-contains("kamer")'
           link: "a.see-page-button"
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
 
       - name: "bpdwoningfonds"
         type: "generic_css"
@@ -374,7 +374,7 @@ cities:
         selectors:
           listing: "div.card.card-result-list"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]
-          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
           address: "h5.card-title a"
           city: ".card-text"
           price: ".object-price .value"

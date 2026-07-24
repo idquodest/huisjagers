@@ -49,15 +49,17 @@
       <div class="field-row" style="margin-top: 0.75rem;">
         <div class="field">
           <label>Required amenities (one per line)</label>
-          <textarea name="required_amenities" placeholder="{{ saved_summary.required_amenities|join('\n') if saved_summary and saved_summary.required_amenities else '' }}">{{ filters.required_amenities|join('\n') if filters and filters.required_amenities else '' }}</textarea>
+          <textarea name="required_amenities" placeholder="{{ saved_summary.required_amenities|join('\n') if saved_summary and saved_summary.required_amenities else 'balcony\ndishwasher' }}">{{ filters.required_amenities|join('\n') if filters and filters.required_amenities else '' }}</textarea>
         </div>
         <div class="field">
           <label>Include keywords (one per line)</label>
-          <textarea name="include_keywords" placeholder="{{ saved_summary.include_keywords|join('\n') if saved_summary and saved_summary.include_keywords else '' }}">{{ filters.include_keywords|join('\n') if filters and filters.include_keywords else '' }}</textarea>
+          <textarea name="include_keywords" placeholder="{{ saved_summary.include_keywords|join('\n') if saved_summary and saved_summary.include_keywords else 'balcony\nbalkon\ngarden' }}">{{ filters.include_keywords|join('\n') if filters and filters.include_keywords else '' }}</textarea>
+          <span class="hint">Listings are Dutch on most sources - add both languages (e.g. balcony + balkon) to catch everything.</span>
         </div>
         <div class="field">
           <label>Exclude keywords (one per line)</label>
-          <textarea name="exclude_keywords" placeholder="{{ saved_summary.exclude_keywords|join('\n') if saved_summary and saved_summary.exclude_keywords else '' }}">{{ filters.exclude_keywords|join('\n') if filters and filters.exclude_keywords else '' }}</textarea>
+          <textarea name="exclude_keywords" placeholder="{{ saved_summary.exclude_keywords|join('\n') if saved_summary and saved_summary.exclude_keywords else 'ground floor\nbegane grond' }}">{{ filters.exclude_keywords|join('\n') if filters and filters.exclude_keywords else '' }}</textarea>
+          <span class="hint">Same here - try both English and Dutch terms.</span>
         </div>
       </div>
     </details>
