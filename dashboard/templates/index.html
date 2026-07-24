@@ -96,14 +96,17 @@
 <table>
   <thead>
     <tr>
-      <th>Address</th>
-      <th>Price</th>
-      <th>Rooms</th>
-      <th>Bathrooms</th>
-      <th>m²</th>
-      <th>Source</th>
+      {% macro sort_th(col, label) -%}
+      <th><a class="sort-link" href="{{ sort_links[col] }}">{{ label }}{% if sort_column == col %} <span class="sort-arrow">{{ '▼' if sort_desc else '▲' }}</span>{% endif %}</a></th>
+      {%- endmacro %}
+      {{ sort_th('address', 'Address') }}
+      {{ sort_th('price', 'Price') }}
+      {{ sort_th('beds', 'Rooms') }}
+      {{ sort_th('baths', 'Bathrooms') }}
+      {{ sort_th('sqft', 'm²') }}
+      {{ sort_th('source', 'Source') }}
       <th>Amenities</th>
-      <th>First Seen</th>
+      {{ sort_th('first_seen', 'First Seen') }}
       <th></th>
     </tr>
   </thead>

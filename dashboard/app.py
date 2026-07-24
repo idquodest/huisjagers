@@ -26,6 +26,12 @@ COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "true").lower() != "false"
 SIGNUP_INVITE_CODE = os.environ.get("SIGNUP_INVITE_CODE", "")
 
 _LOCAL_TZ = ZoneInfo("Europe/Amsterdam")
+# Maps the sortable column name (used in the ?sort= query param and the
+# template) to the key in each listing dict actually being compared.
+_SORT_COLUMNS = {
+    "address": "address", "price": "price", "beds": "beds", "baths": "baths",
+    "sqft": "sqft", "source": "source", "first_seen": "first_seen_sort",
+}
 
 
 def _db_path() -> str:
@@ -69,6 +75,21 @@ def _prefs_from_getter(get) -> dict:
         "exclude_keywords": _lines(get("exclude_keywords", "")),
         "include_keywords": _lines(get("include_keywords", "")),
     }
+
+
+def _sort_listings(listings: list[dict], column: str, desc: bool) -> list[dict]:
+    """Sorts by the given column, case-insensitively for text. Listings
+    with no value for that column always sort to the end regardless of
+    direction - reversing the whole list for a descending sort would
+    otherwise put them first, which reads as broken ("cheapest first"
+    showing unpriced listings at the very top)."""
+    key = _SORT_COLUMNS.get(column, "first_seen_sort")
+    with_value = [l for l in listings if l[key] is not None]
+    without_value = [l for l in listings if l[key] is None]
+    with_value.sort(key=lambda l: l[key].lower() if isinstance(l[key], str) else l[key])
+    if desc:
+        with_value.reverse()
+    return with_value + without_value
 
 
 # --- auth routes -------------------------------------------------------------
@@ -276,7 +297,23 @@ def index(request: Request):
             "first_seen_sort": row["first_seen"],
             "first_seen": _to_local(row["first_seen"]),
         })
-    listings.sort(key=lambda l: l["first_seen_sort"], reverse=True)
+
+    sort_param = qp.get("sort", "-first_seen")
+    sort_column = sort_param.lstrip("-")
+    sort_desc = sort_param.startswith("-")
+    if sort_column not in _SORT_COLUMNS:
+        sort_column, sort_desc = "first_seen", True
+    listings = _sort_listings(listings, sort_column, sort_desc)
+
+    # Every header link needs to preserve the current filters/cities, just
+    # swapping the sort - clicking the already-active column flips its
+    # direction, any other column starts ascending.
+    base_params = [(k, v) for k, v in qp.multi_items() if k not in ("sort", "csrf_token")]
+    sort_links = {}
+    for col in _SORT_COLUMNS:
+        next_desc = not sort_desc if col == sort_column else False
+        qs = urlencode(base_params + [("sort", ("-" if next_desc else "") + col)])
+        sort_links[col] = f"/?{qs}"
 
     cities = {key: cfg.get("name", key) for key, cfg in config["cities"].items()}
     selected_city_names = [cities[c] for c in selected_cities]
@@ -285,6 +322,7 @@ def index(request: Request):
         {
             "session": session, "listings": listings, "cities": cities,
             "selected_cities": selected_cities, "selected_city_names": selected_city_names,
+            "sort_column": sort_column, "sort_desc": sort_desc, "sort_links": sort_links,
             "filters": filters,
             "filters_are_saved": filters_are_saved,
             "saved_summary": saved_summary,
