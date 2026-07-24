@@ -22,27 +22,27 @@
     <div class="filter-row">
       <div class="field">
         <label>Price min (€)</label>
-        <input type="number" name="price_min" value="{{ filters.price_min if filters and filters.price_min is not none else '' }}">
+        <input type="number" step="1" name="price_min" value="{{ filters.price_min|int if filters and filters.price_min is not none else '' }}">
       </div>
       <div class="field">
         <label>Price max (€)</label>
-        <input type="number" name="price_max" value="{{ filters.price_max if filters and filters.price_max is not none else '' }}">
+        <input type="number" step="1" name="price_max" value="{{ filters.price_max|int if filters and filters.price_max is not none else '' }}">
       </div>
       <div class="field">
         <label>Bedrooms min</label>
-        <input type="number" name="beds_min" value="{{ filters.beds_min if filters and filters.beds_min is not none else '' }}">
+        <input type="number" step="1" name="beds_min" value="{{ filters.beds_min|int if filters and filters.beds_min is not none else '' }}">
       </div>
       <div class="field">
         <label>Bathrooms min</label>
-        <input type="number" name="baths_min" value="{{ filters.baths_min if filters and filters.baths_min is not none else '' }}">
+        <input type="number" step="1" name="baths_min" value="{{ filters.baths_min|int if filters and filters.baths_min is not none else '' }}">
       </div>
       <div class="field">
         <label>Size min (m²)</label>
-        <input type="number" name="sqft_min" value="{{ filters.sqft_min if filters and filters.sqft_min is not none else '' }}">
+        <input type="number" step="1" name="sqft_min" value="{{ filters.sqft_min|int if filters and filters.sqft_min is not none else '' }}">
       </div>
       <div class="field">
         <label>Size max (m²)</label>
-        <input type="number" name="sqft_max" value="{{ filters.sqft_max if filters and filters.sqft_max is not none else '' }}">
+        <input type="number" step="1" name="sqft_max" value="{{ filters.sqft_max|int if filters and filters.sqft_max is not none else '' }}">
       </div>
       <div class="field field-checkbox">
         <label><input type="checkbox" name="pet_friendly_required" value="true" {% if filters and filters.pet_friendly_required %}checked{% endif %}> Pet-friendly</label>
@@ -65,9 +65,18 @@
         </div>
       </div>
     </details>
+    <div class="apply-to">
+      <span class="apply-to-label">Save filters for:</span>
+      {% for key, name in cities.items() %}
+        <label class="apply-to-option">
+          <input type="checkbox" name="cities" value="{{ key }}" {% if key == selected_city %}checked{% endif %}> {{ name }}
+        </label>
+      {% endfor %}
+      <span class="hint">Check more than one if you want the same filters everywhere.</span>
+    </div>
     <div class="filter-actions">
       <button class="secondary" type="submit">Show results</button>
-      <button class="primary" type="submit" formmethod="post" formaction="/notification-filters/{{ selected_city }}">Save as my notification filters</button>
+      <button class="primary" type="submit" formmethod="post" formaction="/notification-filters">Save as my notification filters</button>
     </div>
   </form>
 
@@ -105,7 +114,7 @@
     <tr>
       <td data-label="Address">{{ l.address }}</td>
       <td data-label="Price">{{ '€%.0f'|format(l.price) if l.price is not none else '-' }}</td>
-      <td data-label="Rooms/Baths">{{ (l.beds ~ ' Rooms') if l.beds is not none else 'Rooms n/a' }} / {{ (l.baths ~ ' Bath') if l.baths is not none else 'Baths n/a' }}</td>
+      <td data-label="Rooms/Baths">{{ (l.beds|int ~ ' Rooms') if l.beds is not none else 'Rooms n/a' }} / {{ (l.baths|int ~ ' Bath') if l.baths is not none else 'Baths n/a' }}</td>
       <td data-label="m²">{{ l.sqft|int if l.sqft else '-' }}</td>
       <td data-label="Source">{{ l.source }}</td>
       <td data-label="Amenities" class="amenities">

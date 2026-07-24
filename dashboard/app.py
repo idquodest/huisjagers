@@ -169,10 +169,11 @@ def update_ntfy_topic(request: Request, csrf_token: str = Form(...), ntfy_topic_
 
 # --- save notification filters (used by the 20-min notifier, not by browsing) --
 
-@app.post("/notification-filters/{city_key}")
+@app.post("/notification-filters")
 def save_notification_filters(
-    request: Request, city_key: str,
+    request: Request,
     csrf_token: str = Form(...),
+    city: str = Form(""), cities: list[str] = Form([]),
     price_min: str = Form(""), price_max: str = Form(""),
     beds_min: str = Form(""), baths_min: str = Form(""),
     sqft_min: str = Form(""), sqft_max: str = Form(""),
@@ -184,7 +185,7 @@ def save_notification_filters(
         if session is None:
             return RedirectResponse("/login", status_code=303)
         if not auth.check_csrf(request, session, csrf_token):
-            return RedirectResponse(f"/?city={city_key}", status_code=303)
+            return RedirectResponse(f"/?city={city}", status_code=303)
 
         prefs = {
             "price_min": _num(price_min), "price_max": _num(price_max),
@@ -197,12 +198,17 @@ def save_notification_filters(
             "enabled": True,
         }
         now_iso = datetime.now(timezone.utc).isoformat()
-        db.upsert_user_preferences(conn, session["user_id"], city_key, prefs, now_iso)
+        # Same values applied to every checked city - lets someone with
+        # identical preferences everywhere set it up once instead of
+        # repeating the form per city.
+        for city_key in cities:
+            if city_key in load_config(CONFIG_PATH)["cities"]:
+                db.upsert_user_preferences(conn, session["user_id"], city_key, prefs, now_iso)
         conn.commit()
 
     # Redirect without filter query params so the page reloads showing the
     # just-saved values as the default (saved == live, nothing to compare).
-    return RedirectResponse(f"/?city={city_key}", status_code=303)
+    return RedirectResponse(f"/?city={city}", status_code=303)
 
 
 # --- my matches / live browse ---------------------------------------------------
