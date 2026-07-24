@@ -42,11 +42,13 @@
       padding: 0.5rem 1rem; font: inherit; cursor: pointer;
     }
     button.primary:hover, input[type=submit]:hover { background: #1f3f80; }
-    button.secondary {
+    button.secondary, a.secondary {
       background: white; color: #2952a3; border: 1px solid #2952a3; border-radius: 0.25rem;
       padding: 0.4rem 0.75rem; font: inherit; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
+      text-decoration: none; display: inline-block; box-sizing: border-box;
     }
-    button.secondary:hover { background: #eef2fa; }
+    button.secondary:hover, a.secondary:hover { background: #eef2fa; }
+    a.link-plain { color: #2952a3; font-size: 0.85rem; align-self: center; }
     .input-with-button { display: flex; gap: 0.5rem; align-items: center; }
     .input-with-button input { flex: 1; }
     .filter-panel { background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 0.85rem 1rem; margin: 0.5rem 0 1rem; }

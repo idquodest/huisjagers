@@ -76,6 +76,9 @@
     <div class="filter-actions">
       <button class="secondary" type="submit">Show results</button>
       <button class="primary" type="submit" formmethod="post" formaction="/notification-filters">Save as my notification filters</button>
+      {% if selected_city and saved_summary and not filters_are_saved %}
+        <a class="link-plain" href="/?city={{ selected_city }}">Reset to saved filters</a>
+      {% endif %}
     </div>
   </form>
 
