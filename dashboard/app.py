@@ -38,6 +38,15 @@ def _db_path() -> str:
     return os.path.join(BASE_DIR, load_config(CONFIG_PATH)["database"]["path"])
 
 
+@app.on_event("startup")
+def _ensure_schema() -> None:
+    # run.py's own init_db() call would eventually pick up new columns
+    # too, but only on its next 20-min cycle - the dashboard needs the
+    # current schema immediately, not whenever the scraper next happens
+    # to run, especially right after a deploy that added a column.
+    db.init_db(_db_path())
+
+
 def _to_local(iso_str: str | None) -> str:
     if not iso_str:
         return ""
