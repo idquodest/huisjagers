@@ -162,12 +162,46 @@ def logout(request: Request, csrf_token: str = Form(...)):
 
 @app.get("/account", response_class=HTMLResponse)
 def account_form(request: Request):
+    config = load_config(CONFIG_PATH)
     with db.connect(_db_path()) as conn:
         session = auth.get_current_user(request, conn)
         if session is None:
             return RedirectResponse("/login", status_code=303)
+        settings_by_city = db.get_all_user_city_settings(conn, session["user_id"])
 
-    return templates.TemplateResponse(request, "account.html", {"session": session})
+    city_statuses = []
+    for key, cfg in config["cities"].items():
+        row = settings_by_city.get(key)
+        if row is None:
+            status = "unconfigured"
+        elif row["enabled"]:
+            status = "on"
+        else:
+            status = "opted_out"
+        city_statuses.append({
+            "key": key, "name": cfg.get("name", key), "status": status,
+            "summary": db.preferences_row_to_dict(row) if row else None,
+        })
+
+    return templates.TemplateResponse(request, "account.html", {"session": session, "city_statuses": city_statuses})
+
+
+@app.post("/account/city-status/{city_key}")
+def set_city_status(request: Request, city_key: str, csrf_token: str = Form(...), enabled: str = Form(...)):
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        if session is None:
+            return RedirectResponse("/login", status_code=303)
+        if not auth.check_csrf(request, session, csrf_token):
+            return RedirectResponse("/account", status_code=303)
+        if city_key not in load_config(CONFIG_PATH)["cities"]:
+            return RedirectResponse("/account", status_code=303)
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        db.set_city_enabled(conn, session["user_id"], city_key, enabled == "true", now_iso)
+        conn.commit()
+
+    return RedirectResponse("/account", status_code=303)
 
 
 @app.post("/account/ntfy-topic")
@@ -289,6 +323,16 @@ def index(request: Request):
             saved_summary = db.preferences_row_to_dict(pref_rows[0]) if pref_rows else None
             filters_are_saved = filters == saved_summary
 
+        # Cities with no saved-preferences row at all - not "opted out"
+        # (that's a deliberate row with enabled=0, see db.set_city_enabled),
+        # genuinely never touched. Worth a gentle nag since it's otherwise
+        # indistinguishable from "I don't care about this city" and easy to
+        # forget you never finished setting up.
+        settings_by_city = db.get_all_user_city_settings(conn, session["user_id"])
+        unconfigured_city_names = [
+            cfg.get("name", key) for key, cfg in config["cities"].items() if key not in settings_by_city
+        ]
+
     listings = []
     for row in matched_rows:
         listings.append({
@@ -326,5 +370,6 @@ def index(request: Request):
             "filters": filters,
             "filters_are_saved": filters_are_saved,
             "saved_summary": saved_summary,
+            "unconfigured_city_names": unconfigured_city_names,
         },
     )

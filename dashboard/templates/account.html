@@ -21,4 +21,55 @@
     <button class="primary" type="submit">Save</button>
   </form>
 </div>
+
+<div class="card">
+  <h2>Cities</h2>
+  <p class="hint">"Not set up" means you've never saved filters for that city - you'll get no notifications there, but it might just be an oversight. "Not interested" is a deliberate choice to skip a city, so it won't nag you about it.</p>
+  <div class="city-status-list">
+    {% for c in city_statuses %}
+      <div class="city-status-row">
+        <span class="city-status-name">{{ c.name }}</span>
+        {% if c.status == 'on' %}
+          <span class="city-status-badge on">✓ On</span>
+          {% if c.summary.price_min is none and c.summary.price_max is none %}
+            <span class="city-status-summary">No filters set - matches everything with a price</span>
+          {% else %}
+            <span class="city-status-summary">
+              €{{ c.summary.price_min|int if c.summary.price_min is not none else '-' }}–{{ c.summary.price_max|int if c.summary.price_max is not none else '-' }}{% if c.summary.beds_min %}, {{ c.summary.beds_min|int }}+ beds{% endif %}
+            </span>
+          {% endif %}
+        {% elif c.status == 'opted_out' %}
+          <span class="city-status-badge opted_out">— Not interested</span>
+          <span class="city-status-summary"></span>
+        {% else %}
+          <span class="city-status-badge unconfigured">⚠ Not set up</span>
+          <span class="city-status-summary"></span>
+        {% endif %}
+        <div class="city-status-actions">
+          {% if c.status == 'on' %}
+            <a class="link-plain" href="/?cities={{ c.key }}">Edit</a>
+            <form method="post" action="/account/city-status/{{ c.key }}">
+              <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+              <input type="hidden" name="enabled" value="false">
+              <button class="secondary" type="submit">Turn off</button>
+            </form>
+          {% elif c.status == 'opted_out' %}
+            <form method="post" action="/account/city-status/{{ c.key }}">
+              <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+              <input type="hidden" name="enabled" value="true">
+              <button class="secondary" type="submit">Turn back on</button>
+            </form>
+          {% else %}
+            <a class="link-plain" href="/?cities={{ c.key }}">Set up →</a>
+            <form method="post" action="/account/city-status/{{ c.key }}">
+              <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+              <input type="hidden" name="enabled" value="false">
+              <button class="secondary" type="submit">Not interested</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
 {% endblock %}

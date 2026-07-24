@@ -7,6 +7,10 @@
   {%- if selected_cities|length > 0 and selected_cities|length < cities|length %} in {{ selected_city_names|join(', ') }}{% endif -%}
 </p>
 
+{% if unconfigured_city_names %}
+  <p class="hint nag">⚠ You haven't set notification filters for {{ unconfigured_city_names|join(', ') }} yet - you won't get pinged for new listings there. <a href="/account">Manage cities →</a></p>
+{% endif %}
+
 <div class="filter-panel">
   <form method="get" action="/">
     <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">

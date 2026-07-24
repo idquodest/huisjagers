@@ -68,6 +68,18 @@
     .apply-to-label { font-size: 0.85rem; color: #444; }
     .apply-to-option { font-size: 0.9rem; display: flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
     .error { color: #b3261e; background: #fdecea; border: 1px solid #f5c6c2; border-radius: 0.25rem; padding: 0.5rem 0.75rem; margin-bottom: 1rem; }
+    p.nag { color: #7a5b00; background: #fff6e0; border: 1px solid #f0dca0; border-radius: 0.25rem; padding: 0.5rem 0.75rem; font-size: 0.85rem; }
+    p.nag a { color: #7a5b00; font-weight: 600; }
+    .city-status-list { display: flex; flex-direction: column; gap: 0.6rem; }
+    .city-status-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; padding: 0.6rem 0; border-bottom: 1px solid #f0f0f0; }
+    .city-status-row:last-child { border-bottom: none; }
+    .city-status-name { font-weight: 600; min-width: 110px; }
+    .city-status-badge { font-size: 0.78rem; padding: 0.15rem 0.55rem; border-radius: 1rem; white-space: nowrap; }
+    .city-status-badge.on { background: #e3f5e6; color: #2e7d32; }
+    .city-status-badge.unconfigured { background: #fff6e0; color: #7a5b00; }
+    .city-status-badge.opted_out { background: #eee; color: #666; }
+    .city-status-summary { font-size: 0.8rem; color: #666; flex: 1; min-width: 150px; }
+    .city-status-actions { display: flex; gap: 0.6rem; align-items: center; }
     .hint { color: #777; font-size: 0.8rem; }
     .auth-card { max-width: 380px; margin: 3rem auto; }
     @media (max-width: 600px) {

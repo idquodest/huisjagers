@@ -259,6 +259,41 @@ def get_user_preferences(conn: sqlite3.Connection, user_id: int, city_key: str |
     return conn.execute(query, params).fetchall()
 
 
+def get_all_user_city_settings(conn: sqlite3.Connection, user_id: int) -> dict[str, sqlite3.Row]:
+    """Every row for this user keyed by city_key, regardless of enabled -
+    unlike get_user_preferences(), this lets a caller distinguish three
+    real states: never configured (no row at all), actively configured
+    (row, enabled=1), and explicitly opted out (row, enabled=0). The first
+    two look identical to the notifier (no notifications either way) but
+    are very different to a user checking "did I set this up or forget
+    it?"."""
+    rows = conn.execute(
+        "SELECT * FROM user_city_preferences WHERE user_id = ?", (user_id,)
+    ).fetchall()
+    return {row["city_key"]: row for row in rows}
+
+
+def set_city_enabled(conn: sqlite3.Connection, user_id: int, city_key: str, enabled: bool, now_iso: str) -> None:
+    """Toggles notifications for a city on/off without touching whatever
+    filter values are already saved there (if any) - opting out and back
+    in restores your old criteria rather than losing them. If no row
+    exists yet (opting out of a city you never configured), creates a
+    bare marker row so it shows up as an explicit decision, not silence."""
+    existing = conn.execute(
+        "SELECT id FROM user_city_preferences WHERE user_id = ? AND city_key = ?", (user_id, city_key)
+    ).fetchone()
+    if existing:
+        conn.execute(
+            "UPDATE user_city_preferences SET enabled = ?, updated_at = ? WHERE id = ?",
+            (int(enabled), now_iso, existing["id"]),
+        )
+    else:
+        conn.execute(
+            "INSERT INTO user_city_preferences (user_id, city_key, enabled, updated_at) VALUES (?, ?, ?, ?)",
+            (user_id, city_key, int(enabled), now_iso),
+        )
+
+
 def preferences_row_to_dict(row: sqlite3.Row) -> dict:
     return {
         "price_min": row["price_min"], "price_max": row["price_max"],
