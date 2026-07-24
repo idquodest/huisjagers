@@ -37,6 +37,7 @@
       padding: 0.4rem 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem; font: inherit;
     }
     textarea { min-height: 4rem; resize: vertical; }
+    input::placeholder, textarea::placeholder { color: #9a9a9a; opacity: 1; }
     button.primary, input[type=submit] {
       background: #2952a3; color: white; border: none; border-radius: 0.25rem;
       padding: 0.5rem 1rem; font: inherit; cursor: pointer;
@@ -54,9 +55,8 @@
     .filter-panel { background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 0.85rem 1rem; margin: 0.5rem 0 1rem; }
     .filter-panel .filter-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; margin-bottom: 0; }
     .filter-panel .field { min-width: 100px; flex: 1; }
-    .filter-panel .field.field-checkbox { flex: 0 0 auto; justify-content: flex-end; }
-    .filter-panel .field.field-checkbox label { font-size: 0.9rem; color: #1a1a1a; white-space: nowrap; }
     .filter-panel input[type=number] { width: 100%; }
+    .filter-panel .pet-friendly-row { margin-top: 0.75rem; font-size: 0.9rem; color: #1a1a1a; }
     .filter-panel details { margin-top: 0.6rem; }
     .filter-panel summary { cursor: pointer; font-size: 0.85rem; color: #2952a3; }
     .filter-actions { display: flex; gap: 0.75rem; margin-top: 0.85rem; flex-wrap: wrap; }
