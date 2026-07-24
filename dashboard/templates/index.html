@@ -2,21 +2,13 @@
 {% block title %}My Matches - Huisjagers{% endblock %}
 {% block content %}
 <h1>My Matches</h1>
-<p class="subtitle">{{ listings|length }} matching listings{% if selected_city %} in {{ cities.get(selected_city, selected_city) }}{% endif %}</p>
-
-<form class="filters" method="get">
-  <label for="city">City:</label>
-  <select name="city" id="city" onchange="this.form.submit()">
-    <option value="">All cities</option>
-    {% for key, name in cities.items() %}
-      <option value="{{ key }}" {% if key == selected_city %}selected{% endif %}>{{ name }}</option>
-    {% endfor %}
-  </select>
-</form>
+<p class="subtitle">
+  {{ listings|length }} matching listings
+  {%- if selected_cities|length > 0 and selected_cities|length < cities|length %} in {{ selected_city_names|join(', ') }}{% endif -%}
+</p>
 
 <div class="filter-panel">
   <form method="get" action="/">
-    <input type="hidden" name="city" value="{{ selected_city }}">
     <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
     <div class="filter-row">
       <div class="field">
@@ -65,38 +57,40 @@
       </div>
     </details>
     <div class="apply-to">
-      <span class="apply-to-label">Save filters for:</span>
+      <span class="apply-to-label">Cities:</span>
       {% for key, name in cities.items() %}
         <label class="apply-to-option">
-          <input type="checkbox" name="cities" value="{{ key }}" {% if key == selected_city or not selected_city %}checked{% endif %}> {{ name }}
+          <input type="checkbox" name="cities" value="{{ key }}" {% if key in selected_cities %}checked{% endif %}> {{ name }}
         </label>
       {% endfor %}
-      <span class="hint">Check more than one if you want the same filters everywhere{% if not selected_city %} - all cities are checked since you're not viewing one in particular{% endif %}.</span>
+      <span class="hint">Controls both what's shown below and where "Save" applies.</span>
     </div>
     <div class="filter-actions">
       <button class="secondary" type="submit">Show results</button>
       <button class="primary" type="submit" formmethod="post" formaction="/notification-filters">Save as my notification filters</button>
-      {% if selected_city and saved_summary and not filters_are_saved %}
-        <a class="link-plain" href="/?city={{ selected_city }}">Reset to saved filters</a>
+      {% if selected_cities|length == 1 and saved_summary and not filters_are_saved %}
+        <a class="link-plain" href="/?cities={{ selected_cities[0] }}">Reset to saved filters</a>
       {% endif %}
     </div>
   </form>
 
-  {% if selected_city %}
+  {% if selected_cities|length == 1 %}
     {% if filters_are_saved %}
-      <p class="hint filter-status">✓ Showing your saved notification filters for {{ cities.get(selected_city, selected_city) }} - this is what you get pinged about.</p>
+      <p class="hint filter-status">✓ Showing your saved notification filters for {{ selected_city_names[0] }} - this is what you get pinged about.</p>
     {% elif saved_summary %}
-      <p class="hint filter-status">You're browsing with different filters than what's saved. Your notifications for {{ cities.get(selected_city, selected_city) }} are still set to €{{ saved_summary.price_min|int if saved_summary.price_min is not none else '-' }}–{{ saved_summary.price_max|int if saved_summary.price_max is not none else '-' }}{% if saved_summary.beds_min %}, {{ saved_summary.beds_min|int }}+ beds{% endif %} until you hit "Save".</p>
+      <p class="hint filter-status">You're browsing with different filters than what's saved. Your notifications for {{ selected_city_names[0] }} are still set to €{{ saved_summary.price_min|int if saved_summary.price_min is not none else '-' }}–{{ saved_summary.price_max|int if saved_summary.price_max is not none else '-' }}{% if saved_summary.beds_min %}, {{ saved_summary.beds_min|int }}+ beds{% endif %} until you hit "Save".</p>
     {% else %}
-      <p class="hint filter-status">You haven't saved notification filters for {{ cities.get(selected_city, selected_city) }} yet, so you won't get pinged for new listings here until you do.</p>
+      <p class="hint filter-status">You haven't saved notification filters for {{ selected_city_names[0] }} yet, so you won't get pinged for new listings here until you do.</p>
     {% endif %}
+  {% elif selected_cities|length == 0 %}
+    <p class="hint filter-status">No cities checked - check at least one above to see or save anything.</p>
   {% else %}
-    <p class="hint filter-status">These filters apply to every city checked below when you save. The results shown right now are either your live "Show results" browse (all cities, same filter) or, if you haven't touched the panel yet, each city's own saved notification matches.</p>
+    <p class="hint filter-status">These filters apply to the {{ selected_cities|length }} cities checked above when you hit "Save".</p>
   {% endif %}
 </div>
 
 {% if listings|length == 0 %}
-  <p class="hint">No matching listings{% if selected_city %} for these filters{% endif %} right now.</p>
+  <p class="hint">No matching listings right now.</p>
 {% endif %}
 
 <table>

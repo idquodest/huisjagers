@@ -2,9 +2,10 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
+from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
-from fastapi import FastAPI, Form, Query, Request
+from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -25,10 +26,6 @@ COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "true").lower() != "false"
 SIGNUP_INVITE_CODE = os.environ.get("SIGNUP_INVITE_CODE", "")
 
 _LOCAL_TZ = ZoneInfo("Europe/Amsterdam")
-_FILTER_FIELDS = [
-    "price_min", "price_max", "beds_min", "baths_min", "sqft_min", "sqft_max",
-    "pet_friendly_required", "required_amenities", "exclude_keywords", "include_keywords",
-]
 
 
 def _db_path() -> str:
@@ -173,7 +170,7 @@ def update_ntfy_topic(request: Request, csrf_token: str = Form(...), ntfy_topic_
 def save_notification_filters(
     request: Request,
     csrf_token: str = Form(...),
-    city: str = Form(""), cities: list[str] = Form([]),
+    cities: list[str] = Form([]),
     price_min: str = Form(""), price_max: str = Form(""),
     beds_min: str = Form(""), baths_min: str = Form(""),
     sqft_min: str = Form(""), sqft_max: str = Form(""),
@@ -185,7 +182,7 @@ def save_notification_filters(
         if session is None:
             return RedirectResponse("/login", status_code=303)
         if not auth.check_csrf(request, session, csrf_token):
-            return RedirectResponse(f"/?city={city}", status_code=303)
+            return RedirectResponse("/", status_code=303)
 
         prefs = {
             "price_min": _num(price_min), "price_max": _num(price_max),
@@ -201,78 +198,75 @@ def save_notification_filters(
         # Same values applied to every checked city - lets someone with
         # identical preferences everywhere set it up once instead of
         # repeating the form per city.
-        for city_key in cities:
-            if city_key in load_config(CONFIG_PATH)["cities"]:
-                db.upsert_user_preferences(conn, session["user_id"], city_key, prefs, now_iso)
+        valid_cities = load_config(CONFIG_PATH)["cities"]
+        saved_cities = [c for c in cities if c in valid_cities]
+        for city_key in saved_cities:
+            db.upsert_user_preferences(conn, session["user_id"], city_key, prefs, now_iso)
         conn.commit()
 
-    # Redirect without filter query params so the page reloads showing the
-    # just-saved values as the default (saved == live, nothing to compare).
-    return RedirectResponse(f"/?city={city}", status_code=303)
+    # Redirect back showing exactly what was just saved, so the view
+    # immediately reflects it instead of resetting to the unfiltered default.
+    params = [("cities", c) for c in saved_cities] + [
+        ("price_min", price_min), ("price_max", price_max),
+        ("beds_min", beds_min), ("baths_min", baths_min),
+        ("sqft_min", sqft_min), ("sqft_max", sqft_max),
+        ("pet_friendly_required", "true" if pet_friendly_required else ""),
+        ("required_amenities", required_amenities),
+        ("exclude_keywords", exclude_keywords), ("include_keywords", include_keywords),
+    ]
+    return RedirectResponse(f"/?{urlencode(params)}", status_code=303)
 
 
 # --- my matches / live browse ---------------------------------------------------
 
 @app.get("/", response_class=HTMLResponse)
-def index(request: Request, city: str = Query(default="")):
+def index(request: Request):
     config = load_config(CONFIG_PATH)
     qp = request.query_params
-    form_submitted = "price_min" in qp  # the filter bar submits every field, even blank
+    all_city_keys = list(config["cities"].keys())
+    form_submitted = "price_min" in qp  # the filter card submits every field, even blank
+    cities_param_present = "cities" in qp
 
     with db.connect(_db_path()) as conn:
         session = auth.get_current_user(request, conn)
         if session is None:
             return RedirectResponse("/login", status_code=303)
 
+        requested_cities = [c for c in qp.getlist("cities") if c in config["cities"]] if cities_param_present else []
+
+        if form_submitted:
+            # The filter card was actually submitted ("Show results" or
+            # arriving fresh from "Save") - use exactly what was checked
+            # and typed, live, no persisted state involved.
+            selected_cities = requested_cities
+            filters = _prefs_from_getter(qp.get)
+        elif cities_param_present and len(requested_cities) == 1:
+            # "Reset to saved filters" link: just cities=X, no filter
+            # fields - fall back to that one city's saved preferences.
+            selected_cities = requested_cities
+            pref_rows = db.get_user_preferences(conn, session["user_id"], city_key=requested_cities[0])
+            filters = db.preferences_row_to_dict(pref_rows[0]) if pref_rows else _prefs_from_getter(lambda k, d="": d)
+        else:
+            # Truly fresh landing on the page: show everything, unfiltered,
+            # every city checked - no filtering happens until you ask for it.
+            selected_cities = all_city_keys
+            filters = _prefs_from_getter(lambda k, d="": d)
+
         matched_rows = []
-        filters_are_saved = False
-        saved_summary = None
-
-        if city:
-            saved_pref_rows = db.get_user_preferences(conn, session["user_id"], city_key=city)
-            saved_prefs = db.preferences_row_to_dict(saved_pref_rows[0]) if saved_pref_rows else None
-
-            if form_submitted:
-                filters = _prefs_from_getter(qp.get)
-            elif saved_prefs is not None:
-                filters = saved_prefs
-            else:
-                filters = _prefs_from_getter(lambda k, d="": d)
-
-            # Only meaningfully "saved" when a saved row actually exists and
-            # the currently-shown filters match it exactly - covers both the
-            # form-submitted-something-different case and the never-saved-
-            # anything-for-this-city case (dict == None is always False, so
-            # this also handles saved_prefs being None correctly).
-            filters_are_saved = filters == saved_prefs
-            saved_summary = saved_prefs
-
-            for row in db.get_listings(conn, city_key=city):
+        for city_key in selected_cities:
+            for row in db.get_listings(conn, city_key=city_key):
                 if matches(db.row_to_listing(row), filters):
                     matched_rows.append(row)
-        elif form_submitted:
-            # "All cities" with a filter bar actually submitted: apply the
-            # same ad-hoc values across every city's listings, so someone
-            # can compose one universal filter without picking a city first.
-            filters = _prefs_from_getter(qp.get)
-            for city_key in config["cities"]:
-                for row in db.get_listings(conn, city_key=city_key):
-                    if matches(db.row_to_listing(row), filters):
-                        matched_rows.append(row)
-        else:
-            # Fresh landing on "All cities": aggregate each city's live
-            # matches against that city's own saved filters (informational
-            # view), but leave the filter panel blank - there's no single
-            # "the" saved filter to prefill when cities can differ.
-            filters = _prefs_from_getter(lambda k, d="": d)
-            for city_key in config["cities"]:
-                pref_rows = db.get_user_preferences(conn, session["user_id"], city_key=city_key)
-                if not pref_rows:
-                    continue
-                prefs = db.preferences_row_to_dict(pref_rows[0])
-                for row in db.get_listings(conn, city_key=city_key):
-                    if matches(db.row_to_listing(row), prefs):
-                        matched_rows.append(row)
+
+        # A "saved vs. live" comparison only makes sense with exactly one
+        # city in scope - with several (or zero) checked there's no single
+        # "the" saved filter to compare the current view against.
+        saved_summary = None
+        filters_are_saved = False
+        if len(selected_cities) == 1:
+            pref_rows = db.get_user_preferences(conn, session["user_id"], city_key=selected_cities[0])
+            saved_summary = db.preferences_row_to_dict(pref_rows[0]) if pref_rows else None
+            filters_are_saved = filters == saved_summary
 
     listings = []
     for row in matched_rows:
@@ -285,10 +279,12 @@ def index(request: Request, city: str = Query(default="")):
     listings.sort(key=lambda l: l["first_seen_sort"], reverse=True)
 
     cities = {key: cfg.get("name", key) for key, cfg in config["cities"].items()}
+    selected_city_names = [cities[c] for c in selected_cities]
     return templates.TemplateResponse(
         request, "index.html",
         {
-            "session": session, "listings": listings, "cities": cities, "selected_city": city,
+            "session": session, "listings": listings, "cities": cities,
+            "selected_cities": selected_cities, "selected_city_names": selected_city_names,
             "filters": filters,
             "filters_are_saved": filters_are_saved,
             "saved_summary": saved_summary,
