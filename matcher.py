@@ -43,6 +43,10 @@ def matches(listing: Listing, preferences: dict) -> bool:
     if preferences.get("pet_friendly_required") and not listing.pet_friendly:
         return False
 
+    excluded_sources = preferences.get("excluded_sources") or []
+    if listing.source in excluded_sources:
+        return False
+
     required_amenities = preferences.get("required_amenities") or []
     if required_amenities:
         listing_amenities = {a.strip().lower() for a in listing.amenities}

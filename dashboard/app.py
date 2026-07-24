@@ -70,11 +70,15 @@ def _lines(s: str) -> list[str]:
     return [line.strip() for line in (s or "").replace(",", "\n").splitlines() if line.strip()]
 
 
-def _prefs_from_getter(get, hide_house_swaps_default: bool = False) -> dict:
+def _prefs_from_getter(get, excluded_sources: list[str] | None = None, hide_house_swaps_default: bool = False) -> dict:
     """Builds the same preferences-shaped dict matcher.matches() expects,
     from anything with a .get(key, default) - either Starlette's
     request.query_params (live filter bar) or a plain dict of submitted
     form fields (saving to user_city_preferences).
+
+    excluded_sources is multi-value (checkboxes), so it doesn't fit the
+    single-value get() pattern - callers extract it themselves (qp.getlist
+    or a Form-bound list) and pass it straight through; blank state = [].
 
     hide_house_swaps_default only matters for the "nothing submitted,
     nothing saved" blank state: a real form submission always means
@@ -89,6 +93,7 @@ def _prefs_from_getter(get, hide_house_swaps_default: bool = False) -> dict:
         "required_amenities": _lines(get("required_amenities", "")),
         "exclude_keywords": _lines(get("exclude_keywords", "")),
         "include_keywords": _lines(get("include_keywords", "")),
+        "excluded_sources": excluded_sources or [],
         "hide_house_swaps": get("hide_house_swaps", "true" if hide_house_swaps_default else "") == "true",
     }
 
@@ -241,7 +246,7 @@ def update_ntfy_topic(request: Request, csrf_token: str = Form(...), ntfy_topic_
 def save_notification_filters(
     request: Request,
     csrf_token: str = Form(...),
-    cities: list[str] = Form([]),
+    cities: list[str] = Form([]), excluded_sources: list[str] = Form([]),
     price_min: str = Form(""), price_max: str = Form(""),
     beds_min: str = Form(""), baths_min: str = Form(""),
     sqft_min: str = Form(""), sqft_max: str = Form(""),
@@ -263,6 +268,7 @@ def save_notification_filters(
             "required_amenities": _lines(required_amenities),
             "exclude_keywords": _lines(exclude_keywords),
             "include_keywords": _lines(include_keywords),
+            "excluded_sources": excluded_sources,
             "hide_house_swaps": hide_house_swaps,
             "enabled": True,
         }
@@ -278,7 +284,7 @@ def save_notification_filters(
 
     # Redirect back showing exactly what was just saved, so the view
     # immediately reflects it instead of resetting to the unfiltered default.
-    params = [("cities", c) for c in saved_cities] + [
+    params = [("cities", c) for c in saved_cities] + [("excluded_sources", s) for s in excluded_sources] + [
         ("price_min", price_min), ("price_max", price_max),
         ("beds_min", beds_min), ("baths_min", baths_min),
         ("sqft_min", sqft_min), ("sqft_max", sqft_max),
@@ -312,7 +318,7 @@ def index(request: Request):
             # arriving fresh from "Save") - use exactly what was checked
             # and typed, live, no persisted state involved.
             selected_cities = requested_cities
-            filters = _prefs_from_getter(qp.get)
+            filters = _prefs_from_getter(qp.get, excluded_sources=qp.getlist("excluded_sources"))
         elif cities_param_present and len(requested_cities) == 1:
             # "Reset to saved filters" link: just cities=X, no filter
             # fields - fall back to that one city's saved preferences.
@@ -382,11 +388,13 @@ def index(request: Request):
 
     cities = {key: cfg.get("name", key) for key, cfg in config["cities"].items()}
     selected_city_names = [cities[c] for c in selected_cities]
+    all_sources = sorted({s["name"] for city_cfg in config["cities"].values() for s in city_cfg.get("sources", [])})
     return templates.TemplateResponse(
         request, "index.html",
         {
             "session": session, "listings": listings, "cities": cities,
             "selected_cities": selected_cities, "selected_city_names": selected_city_names,
+            "all_sources": all_sources,
             "sort_column": sort_column, "sort_desc": sort_desc, "sort_links": sort_links,
             "filters": filters,
             "filters_are_saved": filters_are_saved,
