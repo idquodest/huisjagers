@@ -1,5 +1,5 @@
 from models import Listing
-from text_utils import any_keyword_matches
+from text_utils import any_keyword_matches, expand_keywords
 
 # Some sources (huurwoningen.nl) mix in "house swap" listings alongside
 # normal rentals - you'd need your own place to offer in exchange, which
@@ -47,11 +47,16 @@ def matches(listing: Listing, preferences: dict) -> bool:
     if listing.source in excluded_sources:
         return False
 
+    # Synonym-expanded (EN<->NL) - a scraped amenity might have matched in
+    # whichever language the source used, so a required "balcony" needs to
+    # also accept a listing whose amenities list only has "balkon".
     required_amenities = preferences.get("required_amenities") or []
     if required_amenities:
         listing_amenities = {a.strip().lower() for a in listing.amenities}
-        if not all(a.strip().lower() in listing_amenities for a in required_amenities):
-            return False
+        for amenity in required_amenities:
+            variants = {v.lower() for v in expand_keywords([amenity])}
+            if not (variants & listing_amenities):
+                return False
 
     # Per-user, match-time keyword filters - distinct from any scrape-time
     # exclude_keywords in config.yaml, which exist to drop things that
@@ -63,12 +68,15 @@ def matches(listing: Listing, preferences: dict) -> bool:
     if preferences.get("hide_house_swaps", True) and any_keyword_matches(searchable_text, _HOUSE_SWAP_KEYWORDS):
         return False
 
+    # expand_keywords adds each term's EN<->NL synonyms (see text_utils) -
+    # typing "balcony" also catches "balkon" without the user needing to
+    # know Dutch rental vocabulary themselves.
     exclude_keywords = preferences.get("exclude_keywords") or []
-    if exclude_keywords and any_keyword_matches(searchable_text, exclude_keywords):
+    if exclude_keywords and any_keyword_matches(searchable_text, expand_keywords(exclude_keywords)):
         return False
 
     include_keywords = preferences.get("include_keywords") or []
-    if include_keywords and not any_keyword_matches(searchable_text, include_keywords):
+    if include_keywords and not any_keyword_matches(searchable_text, expand_keywords(include_keywords)):
         return False
 
     return True
