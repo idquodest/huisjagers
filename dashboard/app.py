@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from urllib.parse import urlencode
@@ -59,6 +60,33 @@ def _set_session_cookie(response, token: str) -> None:
         httponly=True, secure=COOKIE_SECURE, samesite="lax",
         max_age=auth.SESSION_LIFETIME_DAYS * 24 * 3600,
     )
+
+
+# --- application templates: {placeholder} substitution --------------------------
+
+_TEMPLATE_VAR_NAMES = ["address", "city", "price", "sqft", "rooms", "bathrooms", "source", "url", "amenities"]
+
+
+def _listing_template_vars(row: dict, city_name: str) -> dict:
+    amenities = json.loads(row["amenities"] or "[]")
+    return {
+        "address": row["address"] or "",
+        "city": city_name,
+        "price": f"€{row['price']:.0f}" if row["price"] is not None else "the listed price",
+        "sqft": f"{row['sqft']:.0f} m²" if row["sqft"] is not None else "an unspecified size",
+        "rooms": str(int(row["beds"])) if row["beds"] is not None else "an unspecified number of",
+        "bathrooms": str(int(row["baths"])) if row["baths"] is not None else "an unspecified number of",
+        "source": row["source"] or "",
+        "url": row["url"] or "",
+        "amenities": ", ".join(amenities) if amenities else "no listed amenities",
+    }
+
+
+def _render_template(body: str, variables: dict) -> str:
+    # {word} substitution, not str.format() - a template with a stray
+    # brace or a typo'd variable name (e.g. "{adress}") should render with
+    # that placeholder left visibly as-is, not crash the whole page.
+    return re.sub(r"\{(\w+)\}", lambda m: str(variables.get(m.group(1), m.group(0))), body)
 
 
 def _num(s: str) -> float | None:
@@ -238,6 +266,99 @@ def update_ntfy_topic(request: Request, csrf_token: str = Form(...), ntfy_topic_
         conn.commit()
 
     return RedirectResponse("/account", status_code=303)
+
+
+# --- application templates -------------------------------------------------------
+
+@app.get("/templates", response_class=HTMLResponse)
+def templates_list(request: Request):
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        if session is None:
+            return RedirectResponse("/login", status_code=303)
+        user_templates = db.get_application_templates(conn, session["user_id"])
+
+    return templates.TemplateResponse(
+        request, "templates.html",
+        {"session": session, "user_templates": user_templates, "var_names": _TEMPLATE_VAR_NAMES},
+    )
+
+
+@app.post("/templates")
+def templates_create(request: Request, csrf_token: str = Form(...), name: str = Form(...), body: str = Form(...)):
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        if session is None:
+            return RedirectResponse("/login", status_code=303)
+        if not auth.check_csrf(request, session, csrf_token):
+            return RedirectResponse("/templates", status_code=303)
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        db.create_application_template(conn, session["user_id"], name.strip() or "Untitled", body, now_iso)
+        conn.commit()
+
+    return RedirectResponse("/templates", status_code=303)
+
+
+@app.post("/templates/{template_id}")
+def templates_update(
+    request: Request, template_id: int,
+    csrf_token: str = Form(...), name: str = Form(...), body: str = Form(...),
+):
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        if session is None:
+            return RedirectResponse("/login", status_code=303)
+        if not auth.check_csrf(request, session, csrf_token):
+            return RedirectResponse("/templates", status_code=303)
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        db.update_application_template(conn, session["user_id"], template_id, name.strip() or "Untitled", body, now_iso)
+        conn.commit()
+
+    return RedirectResponse("/templates", status_code=303)
+
+
+@app.post("/templates/{template_id}/delete")
+def templates_delete(request: Request, template_id: int, csrf_token: str = Form(...)):
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        if session is None:
+            return RedirectResponse("/login", status_code=303)
+        if not auth.check_csrf(request, session, csrf_token):
+            return RedirectResponse("/templates", status_code=303)
+
+        db.delete_application_template(conn, session["user_id"], template_id)
+        conn.commit()
+
+    return RedirectResponse("/templates", status_code=303)
+
+
+@app.get("/apply/{listing_id}", response_class=HTMLResponse)
+def apply_view(request: Request, listing_id: str, template_id: int | None = None):
+    config = load_config(CONFIG_PATH)
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        if session is None:
+            return RedirectResponse("/login", status_code=303)
+
+        listing = db.get_listing_by_id(conn, listing_id)
+        user_templates = db.get_application_templates(conn, session["user_id"])
+
+        rendered = None
+        selected_template = None
+        if listing is not None and user_templates:
+            selected_template = next((t for t in user_templates if t["id"] == template_id), user_templates[0])
+            city_name = config["cities"].get(listing["city_key"], {}).get("name", listing["city_key"])
+            rendered = _render_template(selected_template["body"], _listing_template_vars(listing, city_name))
+
+    return templates.TemplateResponse(
+        request, "apply.html",
+        {
+            "session": session, "listing": listing, "user_templates": user_templates,
+            "selected_template": selected_template, "rendered": rendered,
+        },
+    )
 
 
 # --- save notification filters (used by the 20-min notifier, not by browsing) --

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Application Templates - Huisjagers{% endblock %}
+{% block content %}
+<h1>Application Templates</h1>
+<p class="subtitle">Write once, reuse per listing. Placeholders get filled in with that listing's details when you hit "Apply" from My Matches.</p>
+
+<div class="card">
+  <h2>Available placeholders</h2>
+  <p class="hint">
+    {% for v in var_names %}<code>{{ '{' ~ v ~ '}' }}</code>{% if not loop.last %} {% endif %}{% endfor %}
+  </p>
+</div>
+
+{% for t in user_templates %}
+  <div class="card">
+    <form method="post" action="/templates/{{ t.id }}">
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+      <div class="field-row">
+        <div class="field">
+          <label>Name</label>
+          <input type="text" name="name" value="{{ t.name }}" required>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Template text</label>
+          <textarea name="body" style="min-height: 8rem;" required>{{ t.body }}</textarea>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="primary" type="submit">Save</button>
+      </div>
+    </form>
+    <form method="post" action="/templates/{{ t.id }}/delete" style="margin-top: 0.5rem;">
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+      <button class="secondary" type="submit" onclick="return confirm('Delete this template?')">Delete</button>
+    </form>
+  </div>
+{% endfor %}
+
+<div class="card">
+  <h2>New template</h2>
+  <form method="post" action="/templates">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <div class="field-row">
+      <div class="field">
+        <label>Name</label>
+        <input type="text" name="name" placeholder="Standard intro" required>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Template text</label>
+        <textarea name="body" style="min-height: 8rem;" placeholder="Hello, I'm interested in {address} in {city} for {price} per month. I'd love to view {rooms} rooms and {sqft}..." required></textarea>
+      </div>
+    </div>
+    <button class="primary" type="submit">Create</button>
+  </form>
+</div>
+{% endblock %}

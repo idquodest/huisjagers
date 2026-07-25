@@ -33,6 +33,7 @@
     .badge.pet { background: #6a4fb0; color: white; }
     .card { background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 1.25rem; margin: 1rem 0; }
     .card h2 { margin-top: 0; }
+    code { background: #eef2fa; color: #2952a3; padding: 0.1rem 0.4rem; border-radius: 0.2rem; font-size: 0.85em; }
     .field-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
     .field { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 140px; }
     label { font-size: 0.85rem; color: #444; }
@@ -97,6 +98,7 @@
       <span class="brand">Huisjagers</span>
       {% if session %}
         <a href="/">My Matches</a>
+        <a href="/templates">Templates</a>
         <a href="/account">Account</a>
         <form method="post" action="/logout">
           <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">

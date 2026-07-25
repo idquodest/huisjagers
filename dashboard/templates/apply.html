@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Apply - Huisjagers{% endblock %}
+{% block content %}
+<h1>Apply</h1>
+
+{% if listing is none %}
+  <p class="hint">That listing couldn't be found - it may have been removed.</p>
+{% elif not user_templates %}
+  <p class="hint">You haven't created an application template yet. <a href="/templates">Create one →</a></p>
+{% else %}
+  <p class="subtitle">{{ listing.address }} - {{ '€%.0f'|format(listing.price) if listing.price is not none else '-' }}</p>
+
+  {% if user_templates|length > 1 %}
+    <div class="card">
+      <form method="get" action="/apply/{{ listing.id }}">
+        <div class="field-row">
+          <div class="field">
+            <label>Template</label>
+            <select name="template_id" onchange="this.form.submit()">
+              {% for t in user_templates %}
+                <option value="{{ t.id }}" {% if selected_template and t.id == selected_template.id %}selected{% endif %}>{{ t.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </form>
+    </div>
+  {% endif %}
+
+  <div class="card">
+    <h2>{{ selected_template.name }}</h2>
+    <textarea id="rendered-text" readonly style="min-height: 12rem;">{{ rendered }}</textarea>
+    <div class="filter-actions">
+      <button class="primary" type="button" onclick="copyRenderedText()">Copy to clipboard</button>
+      <a class="link-plain" href="{{ listing.url }}" target="_blank" rel="noopener noreferrer">Open listing →</a>
+    </div>
+    <p class="hint" id="copy-status"></p>
+  </div>
+{% endif %}
+
+<script>
+  function copyRenderedText() {
+    const el = document.getElementById('rendered-text');
+    navigator.clipboard.writeText(el.value).then(function() {
+      document.getElementById('copy-status').textContent = 'Copied!';
+    }, function() {
+      el.select();
+      document.getElementById('copy-status').textContent = "Couldn't auto-copy - text is selected, use Ctrl/Cmd+C.";
+    });
+  }
+</script>
+{% endblock %}

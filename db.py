@@ -71,6 +71,15 @@ CREATE TABLE IF NOT EXISTS user_listing_status (
     notified_at TEXT,
     PRIMARY KEY (user_id, listing_id)
 );
+
+CREATE TABLE IF NOT EXISTS application_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    name TEXT NOT NULL,
+    body TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
 
 
@@ -155,6 +164,10 @@ def get_listings(conn: sqlite3.Connection, city_key: str | None = None) -> list[
         params.append(city_key)
     query += " ORDER BY first_seen DESC"
     return conn.execute(query, params).fetchall()
+
+
+def get_listing_by_id(conn: sqlite3.Connection, listing_id: str) -> sqlite3.Row | None:
+    return conn.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
 
 
 def row_to_listing(row: sqlite3.Row) -> Listing:
@@ -357,4 +370,41 @@ def mark_user_match_status(
             user_id, listing_id, int(matched), int(notified),
             now_iso if matched else None, now_iso if notified else None,
         ),
+    )
+
+
+# --- application templates -----------------------------------------------------
+
+def create_application_template(conn: sqlite3.Connection, user_id: int, name: str, body: str, now_iso: str) -> int:
+    cur = conn.execute(
+        "INSERT INTO application_templates (user_id, name, body, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+        (user_id, name, body, now_iso, now_iso),
+    )
+    return cur.lastrowid
+
+
+def get_application_templates(conn: sqlite3.Connection, user_id: int) -> list[sqlite3.Row]:
+    return conn.execute(
+        "SELECT * FROM application_templates WHERE user_id = ? ORDER BY created_at", (user_id,)
+    ).fetchall()
+
+
+def get_application_template(conn: sqlite3.Connection, user_id: int, template_id: int) -> sqlite3.Row | None:
+    return conn.execute(
+        "SELECT * FROM application_templates WHERE user_id = ? AND id = ?", (user_id, template_id)
+    ).fetchone()
+
+
+def update_application_template(
+    conn: sqlite3.Connection, user_id: int, template_id: int, name: str, body: str, now_iso: str,
+) -> None:
+    conn.execute(
+        "UPDATE application_templates SET name = ?, body = ?, updated_at = ? WHERE user_id = ? AND id = ?",
+        (name, body, now_iso, user_id, template_id),
+    )
+
+
+def delete_application_template(conn: sqlite3.Connection, user_id: int, template_id: int) -> None:
+    conn.execute(
+        "DELETE FROM application_templates WHERE user_id = ? AND id = ?", (user_id, template_id)
     )
