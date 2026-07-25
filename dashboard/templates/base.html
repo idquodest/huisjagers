@@ -5,25 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Huisjagers{% endblock %}</title>
   <link rel="manifest" href="/static/manifest.webmanifest">
-  <meta name="theme-color" content="#0b0b12">
+  <meta name="theme-color" content="#eef3fc">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #2c2c39;
-      --card: #35353f;
-      --card-soft: #40404c;
-      --border: rgba(255,255,255,0.14);
-      --border-strong: rgba(255,255,255,0.26);
-      --text: #f5f4fa;
-      --text-muted: #c2bfd4;
-      --violet: #8b5cf6;
-      --violet-bright: #a78bfa;
-      --blue: #5b8def;
-      --green: #4ade80;
-      --amber: #fbbf24;
-      --red: #f87171;
+      --bg: #eef3fc;
+      --card: #ffffff;
+      --card-soft: #e4ebfb;
+      --border: rgba(91,58,152,0.14);
+      --border-strong: rgba(91,58,152,0.28);
+      --text: #2a1740;
+      --text-muted: #6b5f84;
+      --violet: #63389e;
+      --violet-bright: #7c4fbe;
+      --blue: #3d56d6;
+      --green: #16a34a;
+      --amber: #d97706;
+      --red: #dc2626;
     }
     * { box-sizing: border-box; }
     body {
@@ -31,15 +31,15 @@
       margin: 0; color: var(--text);
       background-color: var(--bg);
       background-image:
-        radial-gradient(ellipse 900px 500px at 20% -10%, rgba(139,92,246,0.16), transparent 60%),
-        radial-gradient(ellipse 700px 500px at 100% 10%, rgba(91,141,239,0.10), transparent 60%);
+        radial-gradient(ellipse 900px 500px at 20% -10%, rgba(124,79,190,0.14), transparent 60%),
+        radial-gradient(ellipse 700px 500px at 100% 10%, rgba(61,86,214,0.08), transparent 60%);
       background-repeat: no-repeat;
     }
     .page { max-width: 960px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
     h1, h2 { font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
     h1 { margin-bottom: 0.3rem; font-size: 1.85rem; }
     .subtitle { color: var(--text-muted); margin-top: 0; }
-    nav.topbar { background: rgba(38,38,49,0.85); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+    nav.topbar { background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
     nav.topbar .inner { max-width: 960px; margin: 0 auto; padding: 0.9rem 1.25rem; display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: center; }
     nav.topbar a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
     nav.topbar a:hover { color: var(--text); }
@@ -51,7 +51,7 @@
     table {
       width: 100%; border-collapse: collapse; background: var(--card);
       border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+      box-shadow: 0 8px 30px rgba(91,58,152,0.10);
     }
     th, td { text-align: left; padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border); font-size: 0.87rem; }
     th {
@@ -59,7 +59,7 @@
       font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em;
     }
     a.sort-link { display: block; padding: 0.6rem 0.85rem; color: inherit; text-decoration: none; white-space: nowrap; }
-    a.sort-link:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    a.sort-link:hover { color: var(--text); background: rgba(91,58,152,0.06); }
     .sort-arrow { color: var(--violet-bright); font-size: 0.7rem; }
     .amenities { color: var(--text-muted); font-size: 0.78rem; }
     a.listing-link { color: var(--blue); text-decoration: none; font-weight: 600; }
@@ -68,7 +68,7 @@
     .badge.pet { background: rgba(139,92,246,0.18); color: var(--violet-bright); }
     .card {
       background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.35); padding: 1.4rem; margin: 1.1rem 0;
+      box-shadow: 0 8px 30px rgba(91,58,152,0.10); padding: 1.4rem; margin: 1.1rem 0;
     }
     .card h2 { margin-top: 0; font-size: 1.1rem; }
     code {
@@ -84,27 +84,27 @@
     }
     input:focus, textarea:focus, select:focus { outline: none; border-color: var(--violet); box-shadow: 0 0 0 3px rgba(139,92,246,0.25); }
     textarea { min-height: 4rem; resize: vertical; }
-    input::placeholder, textarea::placeholder { color: #5f5c70; opacity: 1; }
+    input::placeholder, textarea::placeholder { color: #a89fbb; opacity: 1; }
     button.primary, input[type=submit] {
       background: var(--violet); color: #fff; border: 1px solid var(--violet); border-radius: 0.5rem;
       padding: 0.55rem 1.2rem; font: inherit; font-weight: 600; cursor: pointer;
       transition: background 0.15s, box-shadow 0.15s;
     }
-    button.primary:hover, input[type=submit]:hover { background: #7c4ded; box-shadow: 0 0 0 4px rgba(139,92,246,0.2); }
-    button.primary:active, input[type=submit]:active { background: #6d3fdb; }
+    button.primary:hover, input[type=submit]:hover { background: #713fb0; box-shadow: 0 0 0 4px rgba(99,56,158,0.2); }
+    button.primary:active, input[type=submit]:active { background: #542f87; }
     button.secondary, a.secondary {
-      background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--border-strong); border-radius: 0.5rem;
+      background: rgba(91,58,152,0.05); color: var(--text); border: 1px solid var(--border-strong); border-radius: 0.5rem;
       padding: 0.45rem 0.85rem; font: inherit; font-weight: 500; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
       text-decoration: none; display: inline-block; box-sizing: border-box; transition: background 0.15s, border-color 0.15s;
     }
-    button.secondary:hover, a.secondary:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.3); }
+    button.secondary:hover, a.secondary:hover { background: rgba(91,58,152,0.10); border-color: rgba(91,58,152,0.35); }
     a.link-plain { color: var(--blue); font-size: 0.85rem; align-self: center; font-weight: 500; text-decoration: none; }
     a.link-plain:hover { color: var(--violet-bright); }
     .input-with-button { display: flex; gap: 0.5rem; align-items: center; }
     .input-with-button input { flex: 1; }
     .filter-panel {
       background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.35); padding: 1rem 1.2rem; margin: 0.5rem 0 1rem;
+      box-shadow: 0 8px 30px rgba(91,58,152,0.10); padding: 1rem 1.2rem; margin: 0.5rem 0 1rem;
     }
     .filter-panel .filter-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; margin-bottom: 0; }
     .filter-panel .field { min-width: 100px; flex: 1; }
@@ -130,7 +130,7 @@
     .city-status-badge { font-size: 0.75rem; padding: 0.15rem 0.55rem; border-radius: 1rem; white-space: nowrap; font-weight: 600; }
     .city-status-badge.on { background: rgba(74,222,128,0.15); color: var(--green); }
     .city-status-badge.unconfigured { background: rgba(251,191,36,0.15); color: var(--amber); }
-    .city-status-badge.opted_out { background: rgba(255,255,255,0.08); color: var(--text-muted); }
+    .city-status-badge.opted_out { background: rgba(91,58,152,0.08); color: var(--text-muted); }
     .city-status-summary { font-size: 0.8rem; color: var(--text-muted); flex: 1; min-width: 150px; }
     .city-status-actions { display: flex; gap: 0.6rem; align-items: center; }
     .hint { color: var(--text-muted); font-size: 0.8rem; }
