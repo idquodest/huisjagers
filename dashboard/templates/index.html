@@ -155,12 +155,13 @@
     <tr id="detail-{{ l.id }}" class="detail-row hidden-row">
       <td colspan="9">
         {% if l.description %}
+          <p class="listing-detail-label">Description</p>
           <p class="listing-description">{{ l.description }}</p>
         {% else %}
-          <p class="hint" style="margin: 0 0 0.5rem;">No description available for this listing.</p>
+          <p class="hint" style="margin: 0 0 1.1rem;">No description available for this listing.</p>
         {% endif %}
         {% if l.address %}
-          <a class="link-plain" href="https://www.google.com/maps/search/?api=1&query={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}" target="_blank" rel="noopener noreferrer">Open in Google Maps →</a>
+          <a class="secondary maps-link" href="https://www.google.com/maps/search/?api=1&query={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}" target="_blank" rel="noopener noreferrer">📍 Open in Google Maps</a>
         {% endif %}
       </td>
     </tr>

@@ -68,13 +68,19 @@
     .sort-arrow { color: var(--violet-bright); font-size: 0.7rem; }
     .amenities { color: var(--text-muted); font-size: 0.78rem; }
     .row-toggle {
-      background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 0.75rem;
-      padding: 0; margin-right: 0.4rem; display: inline-block; transition: transform 0.15s;
+      background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 0.7rem;
+      padding: 0; margin-right: 0.5rem; display: inline-block; transition: transform 0.15s, color 0.15s;
     }
+    .row-toggle:hover { color: var(--violet-bright); }
     .row-toggle.open { transform: rotate(90deg); }
     tr.hidden-row { display: none; }
-    tr.detail-row td { background: var(--card-soft); }
-    .listing-description { margin: 0 0 0.6rem; color: var(--text); font-size: 0.85rem; line-height: 1.5; white-space: pre-wrap; }
+    tr.detail-row td { background: var(--card-soft); padding: 1.4rem 1.9rem 1.6rem; }
+    .listing-detail-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--text-muted); margin: 0 0 0.45rem;
+    }
+    .listing-description { margin: 0 0 1.1rem; color: var(--text); font-size: 0.92rem; line-height: 1.65; max-width: 68ch; white-space: pre-wrap; }
+    a.secondary.maps-link { display: inline-flex; align-items: center; gap: 0.4rem; }
     a.listing-link { color: var(--blue); text-decoration: none; font-weight: 600; }
     a.listing-link:hover { color: var(--violet-bright); text-decoration: underline; }
     .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 600; }
