@@ -18,7 +18,7 @@ _SAMPLE_LISTINGS = [
 
 class MockScraper(Scraper):
     def fetch(
-        self, city_key: str, source_cfg: dict, known_amenities: dict[str, list[str]] | None = None
+        self, city_key: str, source_cfg: dict, known_listings: dict[str, dict] | None = None
     ) -> list[Listing]:
         source_name = source_cfg["name"]
         listings = []

@@ -10,9 +10,10 @@ class Scraper(ABC):
 
     @abstractmethod
     def fetch(
-        self, city_key: str, source_cfg: dict, known_amenities: dict[str, list[str]] | None = None
+        self, city_key: str, source_cfg: dict, known_listings: dict[str, dict] | None = None
     ) -> list[Listing]:
-        # known_amenities maps listing id -> amenities already recorded for
-        # it, letting a scraper skip expensive per-listing work (e.g. a
-        # detail-page visit) for listings it's already seen.
+        # known_listings maps listing id -> {"amenities": [...], "description": ...}
+        # already recorded for it, letting a scraper skip expensive
+        # per-listing work (e.g. a detail-page visit) for listings it's
+        # already seen.
         ...

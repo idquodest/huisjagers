@@ -168,6 +168,18 @@ def upsert_listing(conn: sqlite3.Connection, listing: Listing, now_iso: str) -> 
     return False
 
 
+def get_known_listing_data(conn: sqlite3.Connection) -> dict[str, dict]:
+    """Every listing already in the DB, mapped to its current amenities and
+    description - lets a scraper skip re-fetching a listing's own detail
+    page (and re-risking a Cloudflare challenge) once it's already been
+    visited, instead of paying for that page load on every single cycle."""
+    rows = conn.execute("SELECT id, amenities, description FROM listings").fetchall()
+    return {
+        row["id"]: {"amenities": json.loads(row["amenities"] or "[]"), "description": row["description"]}
+        for row in rows
+    }
+
+
 def get_listings(conn: sqlite3.Connection, city_key: str | None = None) -> list[sqlite3.Row]:
     query = "SELECT * FROM listings"
     params: list = []

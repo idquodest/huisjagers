@@ -25,6 +25,13 @@ def scrape_phase(config: dict, conn, now_iso: str) -> None:
     """Fetch every configured source and upsert into the shared listings
     pool. No knowledge of users/preferences - matching happens separately
     in match_phase(), against whichever listings this leaves behind."""
+    # Loaded once for the whole run rather than once per source - with 8
+    # cities x up to 6 sources each, re-querying every listing's data before
+    # every single source's pass would be a lot of redundant DB reads for
+    # a snapshot that doesn't change mid-run (upserts commit per source,
+    # but this snapshot only needs to reflect "seen before this run").
+    known_listings = db.get_known_listing_data(conn)
+
     for city_key, city_cfg in config["cities"].items():
         city_name = city_cfg.get("name", city_key)
 
@@ -32,7 +39,7 @@ def scrape_phase(config: dict, conn, now_iso: str) -> None:
             source_name = source_cfg["name"]
             try:
                 scraper = get_scraper(source_cfg["type"])
-                listings = scraper.fetch(city_key, source_cfg)
+                listings = scraper.fetch(city_key, source_cfg, known_listings)
             except Exception:
                 logger.exception(
                     "Scraper '%s' failed for city '%s' - skipping this source",

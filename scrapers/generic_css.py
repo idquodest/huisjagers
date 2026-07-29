@@ -52,7 +52,7 @@ class GenericCssScraper(Scraper):
     (those need a headless-browser scraper - a future addition)."""
 
     def fetch(
-        self, city_key: str, source_cfg: dict, known_amenities: dict[str, list[str]] | None = None
+        self, city_key: str, source_cfg: dict, known_listings: dict[str, dict] | None = None
     ) -> list[Listing]:
         url = source_cfg["url"]
         selectors = source_cfg["selectors"]

@@ -68,9 +68,9 @@ class PlaywrightSiteScraper(Scraper):
     appear in the raw HTML."""
 
     def fetch(
-        self, city_key: str, source_cfg: dict, known_amenities: dict[str, list[str]] | None = None
+        self, city_key: str, source_cfg: dict, known_listings: dict[str, dict] | None = None
     ) -> list[Listing]:
-        known_amenities = known_amenities or {}
+        known_listings = known_listings or {}
         url = source_cfg["url"]
         selectors = source_cfg["selectors"]
         source_name = source_cfg["name"]
@@ -147,11 +147,15 @@ class PlaywrightSiteScraper(Scraper):
                 if detail_amenities or amenity_keywords or description_selector:
                     for listing in listings:
                         # Already-seen listings keep whatever detail-page
-                        # amenities were found the first time, instead of
-                        # paying for another page load - their amenities
-                        # (e.g. parking) don't change run to run.
-                        if listing.id in known_amenities:
-                            _add_amenities(listing.amenities, known_amenities[listing.id])
+                        # amenities/description were found the first time,
+                        # instead of paying for another page load (and
+                        # risking a fresh Cloudflare challenge) every single
+                        # cycle - this data doesn't change run to run.
+                        if listing.id in known_listings:
+                            known = known_listings[listing.id]
+                            _add_amenities(listing.amenities, known["amenities"])
+                            if known["description"]:
+                                listing.description = known["description"]
                         else:
                             found_amenities, detail_text = self._fetch_detail_data(
                                 page, listing.url, detail_amenities, amenity_keywords, description_selector
