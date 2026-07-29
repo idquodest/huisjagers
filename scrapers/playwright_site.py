@@ -11,6 +11,21 @@ from .base import Scraper
 
 _NUMBER_RE = re.compile(r"[\d,.]+")
 
+# Telltale strings from Cloudflare's JS-challenge interstitial ("Just a
+# moment...") - if a detail-page fetch lands on this instead of the real
+# listing, its own text must never be mistaken for listing content.
+_CLOUDFLARE_CHALLENGE_MARKERS = (
+    "just a moment",
+    "performing security verification",
+    "enable javascript and cookies to continue",
+    "ray id:",
+)
+
+
+def _looks_like_cloudflare_challenge(page_text: str) -> bool:
+    lowered = page_text.lower()
+    return any(marker in lowered for marker in _CLOUDFLARE_CHALLENGE_MARKERS)
+
 
 def _select_one_opt(card, selector: str | None):
     return card.select_one(selector) if selector else None
@@ -234,6 +249,17 @@ class PlaywrightSiteScraper(Scraper):
         page.goto(detail_url, wait_until="load", timeout=45000)
         soup = BeautifulSoup(page.content(), "html.parser")
         page_text = soup.get_text(" ", strip=True)
+
+        if _looks_like_cloudflare_challenge(page_text):
+            # The JS challenge usually clears itself within a few seconds in
+            # a real browser engine - give it one retry before giving up,
+            # rather than storing the interstitial's own text as if it were
+            # the listing's description/amenities.
+            page.wait_for_timeout(6000)
+            soup = BeautifulSoup(page.content(), "html.parser")
+            page_text = soup.get_text(" ", strip=True)
+            if _looks_like_cloudflare_challenge(page_text):
+                return [], ""
 
         found = []
         for entry in detail_amenities:
