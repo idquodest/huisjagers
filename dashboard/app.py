@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import secrets
 import sys
 from datetime import datetime, timezone
 from urllib.parse import urlencode
@@ -14,6 +15,7 @@ from fastapi.templating import Jinja2Templates
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import auth  # noqa: E402
 import db  # noqa: E402
+import oauth  # noqa: E402
 from matcher import matches  # noqa: E402
 from run import load_config  # noqa: E402
 
@@ -25,6 +27,13 @@ app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__
 CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
 COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "true").lower() != "false"
 SIGNUP_INVITE_CODE = os.environ.get("SIGNUP_INVITE_CODE", "")
+# OAuth redirect_uri must exactly match what's registered with the provider,
+# so it's a fixed public URL rather than derived from the incoming request -
+# cloudflared talks to uvicorn over plain http internally, so request.url
+# would report the wrong scheme.
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://huisjagers.solvire.nl")
+OAUTH_STATE_COOKIE = "oauth_state"
+OAUTH_INVITE_COOKIE = "oauth_invite"
 
 _LOCAL_TZ = ZoneInfo("Europe/Amsterdam")
 # Maps the sortable column name (used in the ?sort= query param and the
@@ -145,7 +154,9 @@ def _sort_listings(listings: list[dict], column: str, desc: bool) -> list[dict]:
 
 @app.get("/signup", response_class=HTMLResponse)
 def signup_form(request: Request):
-    return templates.TemplateResponse(request, "signup.html", {"error": None})
+    return templates.TemplateResponse(
+        request, "signup.html", {"error": None, "google_enabled": oauth.is_configured("google")}
+    )
 
 
 @app.post("/signup")
@@ -154,12 +165,13 @@ def signup_submit(
     email: str = Form(...), password: str = Form(...), invite_code: str = Form(...),
     ntfy_topic_url: str = Form(""),
 ):
+    ctx = {"google_enabled": oauth.is_configured("google")}
     if SIGNUP_INVITE_CODE and invite_code != SIGNUP_INVITE_CODE:
-        return templates.TemplateResponse(request, "signup.html", {"error": "Invalid invite code"}, status_code=400)
+        return templates.TemplateResponse(request, "signup.html", {**ctx, "error": "Invalid invite code"}, status_code=400)
 
     with db.connect(_db_path()) as conn:
         if db.get_user_by_email(conn, email):
-            return templates.TemplateResponse(request, "signup.html", {"error": "That email is already registered"}, status_code=400)
+            return templates.TemplateResponse(request, "signup.html", {**ctx, "error": "That email is already registered"}, status_code=400)
 
         now_iso = datetime.now(timezone.utc).isoformat()
         user_id = db.create_user(
@@ -176,15 +188,18 @@ def signup_submit(
 
 @app.get("/login", response_class=HTMLResponse)
 def login_form(request: Request):
-    return templates.TemplateResponse(request, "login.html", {"error": None})
+    return templates.TemplateResponse(
+        request, "login.html", {"error": None, "google_enabled": oauth.is_configured("google")}
+    )
 
 
 @app.post("/login")
 def login_submit(request: Request, email: str = Form(...), password: str = Form(...)):
+    ctx = {"google_enabled": oauth.is_configured("google")}
     with db.connect(_db_path()) as conn:
         user = db.get_user_by_email(conn, email)
         if user is None or not auth.verify_password(password, user["password_hash"]):
-            return templates.TemplateResponse(request, "login.html", {"error": "Incorrect email or password"}, status_code=400)
+            return templates.TemplateResponse(request, "login.html", {**ctx, "error": "Incorrect email or password"}, status_code=400)
 
         token, _ = auth.start_session(conn, user["id"])
         conn.commit()
@@ -204,6 +219,94 @@ def logout(request: Request, csrf_token: str = Form(...)):
 
     response = RedirectResponse("/login", status_code=303)
     response.delete_cookie(auth.SESSION_COOKIE)
+    return response
+
+
+# --- social login (Google, more providers later) ------------------------------
+
+@app.post("/auth/{provider}/start")
+def oauth_start(provider: str, invite_code: str = Form("")):
+    if provider not in oauth.PROVIDERS or not oauth.is_configured(provider):
+        return RedirectResponse("/login", status_code=303)
+
+    state = secrets.token_urlsafe(24)
+    redirect_uri = f"{PUBLIC_BASE_URL}/auth/{provider}/callback"
+    response = RedirectResponse(oauth.build_authorize_url(provider, redirect_uri, state), status_code=303)
+    response.set_cookie(OAUTH_STATE_COOKIE, state, httponly=True, secure=COOKIE_SECURE, samesite="lax", max_age=600)
+    # Only present on the signup form's button - its absence at the callback
+    # means "this was a login attempt", which skips the invite-code gate
+    # (existing users shouldn't need one to log back in).
+    if invite_code:
+        response.set_cookie(OAUTH_INVITE_COOKIE, invite_code, httponly=True, secure=COOKIE_SECURE, samesite="lax", max_age=600)
+    return response
+
+
+@app.get("/auth/{provider}/callback", response_class=HTMLResponse)
+def oauth_callback(
+    request: Request, provider: str,
+    code: str | None = None, state: str | None = None, error: str | None = None,
+):
+    login_error = templates.TemplateResponse(
+        request, "login.html",
+        {"error": "Google sign-in failed - please try again.", "google_enabled": oauth.is_configured("google")},
+        status_code=400,
+    )
+
+    if error or provider not in oauth.PROVIDERS or not oauth.is_configured(provider):
+        return login_error
+
+    cookie_state = request.cookies.get(OAUTH_STATE_COOKIE)
+    if not code or not state or not cookie_state or not secrets.compare_digest(state, cookie_state):
+        return login_error
+
+    try:
+        access_token = oauth.exchange_code(provider, code, f"{PUBLIC_BASE_URL}/auth/{provider}/callback")
+        info = oauth.fetch_userinfo(provider, access_token)
+    except Exception:
+        return login_error
+
+    if not info.get("email"):
+        return login_error
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    invite_code = request.cookies.get(OAUTH_INVITE_COOKIE)
+
+    with db.connect(_db_path()) as conn:
+        user = db.get_user_by_oauth(conn, provider, info["id"])
+        if user is None:
+            existing = db.get_user_by_email(conn, info["email"])
+            if existing is not None:
+                # Provider confirmed this email is verified - safe to treat
+                # as proof of ownership and attach the social login to the
+                # existing password account rather than erroring or forking
+                # a second account for the same person.
+                if info["email_verified"]:
+                    db.link_oauth_to_user(conn, existing["id"], provider, info["id"])
+                    user = existing
+                else:
+                    return templates.TemplateResponse(
+                        request, "login.html",
+                        {"error": "That email is already registered - log in with your password instead.",
+                         "google_enabled": oauth.is_configured("google")},
+                        status_code=400,
+                    )
+            else:
+                if SIGNUP_INVITE_CODE and invite_code != SIGNUP_INVITE_CODE:
+                    return templates.TemplateResponse(
+                        request, "signup.html",
+                        {"error": "Invalid invite code.", "google_enabled": oauth.is_configured("google")},
+                        status_code=400,
+                    )
+                user_id = db.create_oauth_user(conn, info["email"], provider, info["id"], now_iso, display_name=info.get("name"))
+                user = db.get_user_by_id(conn, user_id)
+
+        token, _ = auth.start_session(conn, user["id"])
+        conn.commit()
+
+    response = RedirectResponse("/", status_code=303)
+    _set_session_cookie(response, token)
+    response.delete_cookie(OAUTH_STATE_COOKIE)
+    response.delete_cookie(OAUTH_INVITE_COOKIE)
     return response
 
 

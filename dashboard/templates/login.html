@@ -19,6 +19,11 @@
     </div>
     <button class="primary" type="submit">Log in</button>
   </form>
+  {% if google_enabled %}
+    <form method="post" action="/auth/google/start" style="margin-top: 0.6rem;">
+      <button class="secondary" type="submit">Continue with Google</button>
+    </form>
+  {% endif %}
   <p class="hint">No account? <a href="/signup">Sign up</a></p>
 </div>
 {% endblock %}

@@ -1,6 +1,9 @@
 import json
+import secrets
 import sqlite3
 from contextlib import contextmanager
+
+import bcrypt
 
 from models import Listing
 
@@ -114,6 +117,15 @@ def init_db(db_path: str) -> None:
         conn.executescript(SCHEMA)
         _ensure_column(conn, "user_city_preferences", "hide_house_swaps", "INTEGER NOT NULL DEFAULT 1")
         _ensure_column(conn, "user_city_preferences", "excluded_sources", "TEXT")
+        _ensure_column(conn, "users", "oauth_provider", "TEXT")
+        _ensure_column(conn, "users", "oauth_id", "TEXT")
+        # Partial index (only rows that actually have an oauth link) so two
+        # users can't end up linked to the same provider account, without
+        # constraining the many password-only rows where both are NULL.
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oauth "
+            "ON users(oauth_provider, oauth_id) WHERE oauth_provider IS NOT NULL"
+        )
         conn.commit()
 
 
@@ -205,6 +217,37 @@ def create_user(
 
 def get_user_by_email(conn: sqlite3.Connection, email: str) -> sqlite3.Row | None:
     return conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+
+
+def get_user_by_oauth(conn: sqlite3.Connection, provider: str, oauth_id: str) -> sqlite3.Row | None:
+    return conn.execute(
+        "SELECT * FROM users WHERE oauth_provider = ? AND oauth_id = ?", (provider, oauth_id)
+    ).fetchone()
+
+
+def create_oauth_user(
+    conn: sqlite3.Connection, email: str, provider: str, oauth_id: str, now_iso: str,
+    display_name: str | None = None,
+) -> int:
+    """Social-login signup: there's no password to check, but password_hash
+    stays NOT NULL, so a real (unguessable, unusable) bcrypt hash is stored
+    anyway rather than loosening the column constraint - it just never
+    matches any password a user could type."""
+    unusable_hash = bcrypt.hashpw(secrets.token_urlsafe(32).encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    cur = conn.execute(
+        """
+        INSERT INTO users (email, password_hash, display_name, oauth_provider, oauth_id, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (email, unusable_hash, display_name, provider, oauth_id, now_iso),
+    )
+    return cur.lastrowid
+
+
+def link_oauth_to_user(conn: sqlite3.Connection, user_id: int, provider: str, oauth_id: str) -> None:
+    conn.execute(
+        "UPDATE users SET oauth_provider = ?, oauth_id = ? WHERE id = ?", (provider, oauth_id, user_id)
+    )
 
 
 def get_user_by_id(conn: sqlite3.Connection, user_id: int) -> sqlite3.Row | None:

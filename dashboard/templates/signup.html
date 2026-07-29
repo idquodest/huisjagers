@@ -34,6 +34,9 @@
       </div>
     </div>
     <button class="primary" type="submit">Sign up</button>
+    {% if google_enabled %}
+      <button class="secondary" type="submit" formaction="/auth/google/start" formnovalidate style="margin-left: 0.5rem;">Continue with Google</button>
+    {% endif %}
   </form>
   <p class="hint">Already have an account? <a href="/login">Log in</a></p>
 </div>
