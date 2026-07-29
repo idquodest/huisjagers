@@ -81,6 +81,11 @@ class PlaywrightSiteScraper(Scraper):
         # entry costs one extra page load per listing.
         detail_amenities = source_cfg.get("detail_amenities", [])
         amenity_keywords = selectors.get("amenity_keywords", [])
+        # The listing's own written blurb, e.g. Pararius-platform sites'
+        # ".listing-detail-description__content" - only exists on the detail
+        # page, never the summary card. When present, this replaces the
+        # card's raw text as the listing's description (see _fetch_detail_data).
+        description_selector = selectors.get("description")
         # Safety net: even with a UI filter applied (below), keep dropping
         # any card that isn't actually this city.
         city_filter = {c.lower() for c in source_cfg.get("city_filter", [])}
@@ -139,7 +144,7 @@ class PlaywrightSiteScraper(Scraper):
                         if not self._go_to_next_page(page, next_page_selector, wait_selector):
                             break
 
-                if detail_amenities or amenity_keywords:
+                if detail_amenities or amenity_keywords or description_selector:
                     for listing in listings:
                         # Already-seen listings keep whatever detail-page
                         # amenities were found the first time, instead of
@@ -149,14 +154,24 @@ class PlaywrightSiteScraper(Scraper):
                             _add_amenities(listing.amenities, known_amenities[listing.id])
                         else:
                             found_amenities, detail_text = self._fetch_detail_data(
-                                page, listing.url, detail_amenities, amenity_keywords
+                                page, listing.url, detail_amenities, amenity_keywords, description_selector
                             )
                             _add_amenities(listing.amenities, found_amenities)
-                            # Fold the detail page's text into description too,
-                            # not just the summary card's - e.g. rebogroep's
-                            # parking info only exists on this page, so a
-                            # keyword filter for "parking" needs it here.
-                            listing.description = f"{listing.description or ''} {detail_text}".strip()
+                            if description_selector:
+                                # A targeted selector gives the listing's own
+                                # written blurb - use it on its own rather
+                                # than tacking it onto the noisy card-text
+                                # summary (address/price/etc. already live in
+                                # their own columns).
+                                if detail_text:
+                                    listing.description = detail_text
+                            else:
+                                # No dedicated blurb selector for this source
+                                # - fold the whole detail page's text in as
+                                # before, e.g. rebogroep's parking info only
+                                # exists there, and a keyword filter for
+                                # "parking" needs it findable in description.
+                                listing.description = f"{listing.description or ''} {detail_text}".strip()
             finally:
                 browser.close()
 
@@ -244,7 +259,8 @@ class PlaywrightSiteScraper(Scraper):
         return listings
 
     def _fetch_detail_data(
-        self, page, detail_url: str, detail_amenities: list[dict], amenity_keywords: list[str]
+        self, page, detail_url: str, detail_amenities: list[dict], amenity_keywords: list[str],
+        description_selector: str | None = None,
     ) -> tuple[list[str], str]:
         page.goto(detail_url, wait_until="load", timeout=45000)
         soup = BeautifulSoup(page.content(), "html.parser")
@@ -270,4 +286,22 @@ class PlaywrightSiteScraper(Scraper):
         if amenity_keywords:
             _add_amenities(found, find_keyword_matches(page_text.lower(), amenity_keywords))
 
+        if description_selector:
+            return found, self._extract_first_paragraph(soup, description_selector)
         return found, page_text
+
+    def _extract_first_paragraph(self, soup, description_selector: str) -> str:
+        el = soup.select_one(description_selector)
+        if not el:
+            return ""
+        text = el.get_text(" ", strip=True)
+        # Sites often duplicate their own section heading ("Description")
+        # into the leading text of the content block itself.
+        if text.lower().startswith("description"):
+            text = text[len("description"):].lstrip(" :–-")
+        # Agencies write the blurb as one text node with real embedded
+        # newlines for paragraph breaks (not separate <p> tags) - split on
+        # those rather than truncating by character count, so a paragraph
+        # never gets cut off mid-sentence.
+        paragraphs = [p.strip() for p in re.split(r"\n{2,}", text) if p.strip()]
+        return paragraphs[0] if paragraphs else ""

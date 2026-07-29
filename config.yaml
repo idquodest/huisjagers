@@ -81,6 +81,7 @@ cities:
           sqft: ".illustrated-features__item--surface-area"
           link: ".listing-search-item__link--title"
           amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
 
       # huurwoningen.nl is the same underlying platform as pararius (Pararius
       # Group) - identical markup/class names, same Cloudflare challenge
@@ -99,6 +100,7 @@ cities:
           sqft: ".illustrated-features__item--surface-area"
           link: ".listing-search-item__link--title"
           amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
 
       # ikwilhuren.nu is plain static HTML (generic_css works, no browser
       # needed) but - like rebogroep - lists rentals nationwide with no
@@ -214,6 +216,7 @@ cities:
           sqft: ".illustrated-features__item--surface-area"
           link: ".listing-search-item__link--title"
           amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
 
       - name: "huurwoningen"
         type: "playwright_site"
@@ -228,6 +231,7 @@ cities:
           sqft: ".illustrated-features__item--surface-area"
           link: ".listing-search-item__link--title"
           amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
 
       - name: "ikwilhuren"
         type: "generic_css"
@@ -315,6 +319,7 @@ cities:
           sqft: ".illustrated-features__item--surface-area"
           link: ".listing-search-item__link--title"
           amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
 
       - name: "huurwoningen"
         type: "playwright_site"
@@ -329,6 +334,7 @@ cities:
           sqft: ".illustrated-features__item--surface-area"
           link: ".listing-search-item__link--title"
           amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
 
       - name: "ikwilhuren"
         type: "generic_css"
