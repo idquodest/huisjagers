@@ -387,3 +387,488 @@ cities:
           beds: ".object-rooms .value"
           sqft: ".object-area .value"
           link: "h5.card-title a"
+
+  # Rotterdam / Amsterdam / The Hague / Groningen / Zwolle added on top of the
+  # original 3 cities. Same 6 sources where each one actually covers the
+  # city - verified live before adding rather than assumed, since not every
+  # source has nationwide coverage (see per-city notes below).
+  rotterdam:
+    name: "Rotterdam"
+    sources:
+      - name: "rebogroep"
+        type: "playwright_site"
+        url: "https://www.rebogroep.nl/nl/particulier/ons-aanbod/huren"
+        decimal_comma: true
+        ui_filters:
+          - trigger_text: "Plaats"
+            option_text: "Rotterdam"
+        city_filter: ["Rotterdam"]
+        selectors:
+          listing: "a.object-card"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".location h5"
+          city: ".location .value"
+          price: "h6.price"
+          beds: 'div.mobileHideLabel:has(span.label:-soup-contains("Kamers")) span.value'
+          sqft: 'div.mobileHideLabel:has(span.label:-soup-contains("Woonopp")) span.value'
+        detail_amenities:
+          - selector: 'li.listItem:has(div.label:-soup-contains("Parkeerfaciliteiten")) div.value'
+            label: "parking"
+
+      - name: "pararius"
+        type: "playwright_site"
+        url: "https://www.pararius.com/apartments/rotterdam"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "huurwoningen"
+        type: "playwright_site"
+        url: "https://www.huurwoningen.nl/en/in/rotterdam/"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "ikwilhuren"
+        type: "generic_css"
+        url: "https://ikwilhuren.nu/aanbod/"
+        page_url_pattern: "{url}?page={page}"
+        max_pages: 25
+        decimal_comma: true
+        city_filter: ["rotterdam"]
+        selectors:
+          listing: "div.card-woning"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".card-title a"
+          city: ".card-title + span"
+          price: ".dotted-spans span.fw-bold"
+          sqft: ".dotted-spans > span:has(sup)"
+          beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
+          link: ".card-title a"
+
+      - name: "nederwoon"
+        type: "generic_css"
+        url: "https://www.nederwoon.nl/search?city=Rotterdam&search_type=1"
+        decimal_comma: true
+        selectors:
+          listing: "div.location"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          address: "a.see-page-button"
+          city: "p.color-medium.fixed-lh"
+          price: "p.heading-md"
+          sqft: 'li:-soup-contains("Woonoppervlakte")'
+          beds: 'li:-soup-contains("kamer")'
+          link: "a.see-page-button"
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+
+      - name: "bpdwoningfonds"
+        type: "generic_css"
+        url: "https://hurenbij.bpdwoningfonds.nl/aanbod/"
+        decimal_comma: true
+        city_filter: ["rotterdam"]
+        selectors:
+          listing: "div.card.card-result-list"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: "h5.card-title a"
+          city: ".card-text"
+          price: ".object-price .value"
+          beds: ".object-rooms .value"
+          sqft: ".object-area .value"
+          link: "h5.card-title a"
+
+  amsterdam:
+    name: "Amsterdam"
+    sources:
+      - name: "rebogroep"
+        type: "playwright_site"
+        url: "https://www.rebogroep.nl/nl/particulier/ons-aanbod/huren"
+        decimal_comma: true
+        ui_filters:
+          - trigger_text: "Plaats"
+            option_text: "Amsterdam"
+        city_filter: ["Amsterdam"]
+        selectors:
+          listing: "a.object-card"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".location h5"
+          city: ".location .value"
+          price: "h6.price"
+          beds: 'div.mobileHideLabel:has(span.label:-soup-contains("Kamers")) span.value'
+          sqft: 'div.mobileHideLabel:has(span.label:-soup-contains("Woonopp")) span.value'
+        detail_amenities:
+          - selector: 'li.listItem:has(div.label:-soup-contains("Parkeerfaciliteiten")) div.value'
+            label: "parking"
+
+      - name: "pararius"
+        type: "playwright_site"
+        url: "https://www.pararius.com/apartments/amsterdam"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "huurwoningen"
+        type: "playwright_site"
+        url: "https://www.huurwoningen.nl/en/in/amsterdam/"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "ikwilhuren"
+        type: "generic_css"
+        url: "https://ikwilhuren.nu/aanbod/"
+        page_url_pattern: "{url}?page={page}"
+        max_pages: 25
+        decimal_comma: true
+        city_filter: ["amsterdam"]
+        selectors:
+          listing: "div.card-woning"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".card-title a"
+          city: ".card-title + span"
+          price: ".dotted-spans span.fw-bold"
+          sqft: ".dotted-spans > span:has(sup)"
+          beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
+          link: ".card-title a"
+
+      - name: "nederwoon"
+        type: "generic_css"
+        url: "https://www.nederwoon.nl/search?city=Amsterdam&search_type=1"
+        decimal_comma: true
+        selectors:
+          listing: "div.location"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          address: "a.see-page-button"
+          city: "p.color-medium.fixed-lh"
+          price: "p.heading-md"
+          sqft: 'li:-soup-contains("Woonoppervlakte")'
+          beds: 'li:-soup-contains("kamer")'
+          link: "a.see-page-button"
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+
+      - name: "bpdwoningfonds"
+        type: "generic_css"
+        url: "https://hurenbij.bpdwoningfonds.nl/aanbod/"
+        decimal_comma: true
+        city_filter: ["amsterdam"]
+        selectors:
+          listing: "div.card.card-result-list"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: "h5.card-title a"
+          city: ".card-text"
+          price: ".object-price .value"
+          beds: ".object-rooms .value"
+          sqft: ".object-area .value"
+          link: "h5.card-title a"
+
+  # Dutch sites disagree on this city's name - pararius/huurwoningen use the
+  # URL slug "den-haag", rebogroep's dropdown only offers the formal
+  # "'s-Gravenhage", and nederwoon's search param only matched on
+  # "'s-Gravenhage" too (both "Den Haag" and the URL-encoded %27s-Gravenhage
+  # returned zero/wrong results when tested live - the literal apostrophe
+  # character is required). city_filter lists span all three name forms.
+  the_hague:
+    name: "The Hague"
+    sources:
+      - name: "rebogroep"
+        type: "playwright_site"
+        url: "https://www.rebogroep.nl/nl/particulier/ons-aanbod/huren"
+        decimal_comma: true
+        ui_filters:
+          - trigger_text: "Plaats"
+            option_text: "'s-Gravenhage"
+        city_filter: ["'s-Gravenhage", "Den Haag", "The Hague"]
+        selectors:
+          listing: "a.object-card"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".location h5"
+          city: ".location .value"
+          price: "h6.price"
+          beds: 'div.mobileHideLabel:has(span.label:-soup-contains("Kamers")) span.value'
+          sqft: 'div.mobileHideLabel:has(span.label:-soup-contains("Woonopp")) span.value'
+        detail_amenities:
+          - selector: 'li.listItem:has(div.label:-soup-contains("Parkeerfaciliteiten")) div.value'
+            label: "parking"
+
+      - name: "pararius"
+        type: "playwright_site"
+        url: "https://www.pararius.com/apartments/den-haag"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "huurwoningen"
+        type: "playwright_site"
+        url: "https://www.huurwoningen.nl/en/in/den-haag/"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "ikwilhuren"
+        type: "generic_css"
+        url: "https://ikwilhuren.nu/aanbod/"
+        page_url_pattern: "{url}?page={page}"
+        max_pages: 25
+        decimal_comma: true
+        city_filter: ["den haag", "'s-gravenhage", "gravenhage"]
+        selectors:
+          listing: "div.card-woning"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".card-title a"
+          city: ".card-title + span"
+          price: ".dotted-spans span.fw-bold"
+          sqft: ".dotted-spans > span:has(sup)"
+          beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
+          link: ".card-title a"
+
+      - name: "nederwoon"
+        type: "generic_css"
+        url: "https://www.nederwoon.nl/search?city='s-Gravenhage&search_type=1"
+        decimal_comma: true
+        selectors:
+          listing: "div.location"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          address: "a.see-page-button"
+          city: "p.color-medium.fixed-lh"
+          price: "p.heading-md"
+          sqft: 'li:-soup-contains("Woonoppervlakte")'
+          beds: 'li:-soup-contains("kamer")'
+          link: "a.see-page-button"
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+
+      - name: "bpdwoningfonds"
+        type: "generic_css"
+        url: "https://hurenbij.bpdwoningfonds.nl/aanbod/"
+        decimal_comma: true
+        city_filter: ["den haag", "'s-gravenhage", "gravenhage"]
+        selectors:
+          listing: "div.card.card-result-list"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: "h5.card-title a"
+          city: ".card-text"
+          price: ".object-price .value"
+          beds: ".object-rooms .value"
+          sqft: ".object-area .value"
+          link: "h5.card-title a"
+
+  # No rebogroep here - its "Plaats" dropdown (checked live) simply doesn't
+  # list Groningen or Zwolle as options, unlike the other 6 cities.
+  groningen:
+    name: "Groningen"
+    sources:
+      - name: "pararius"
+        type: "playwright_site"
+        url: "https://www.pararius.com/apartments/groningen"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "huurwoningen"
+        type: "playwright_site"
+        url: "https://www.huurwoningen.nl/en/in/groningen/"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "ikwilhuren"
+        type: "generic_css"
+        url: "https://ikwilhuren.nu/aanbod/"
+        page_url_pattern: "{url}?page={page}"
+        max_pages: 25
+        decimal_comma: true
+        city_filter: ["groningen"]
+        selectors:
+          listing: "div.card-woning"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".card-title a"
+          city: ".card-title + span"
+          price: ".dotted-spans span.fw-bold"
+          sqft: ".dotted-spans > span:has(sup)"
+          beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
+          link: ".card-title a"
+
+      - name: "nederwoon"
+        type: "generic_css"
+        url: "https://www.nederwoon.nl/search?city=Groningen&search_type=1"
+        decimal_comma: true
+        selectors:
+          listing: "div.location"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          address: "a.see-page-button"
+          city: "p.color-medium.fixed-lh"
+          price: "p.heading-md"
+          sqft: 'li:-soup-contains("Woonoppervlakte")'
+          beds: 'li:-soup-contains("kamer")'
+          link: "a.see-page-button"
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+
+      - name: "bpdwoningfonds"
+        type: "generic_css"
+        url: "https://hurenbij.bpdwoningfonds.nl/aanbod/"
+        decimal_comma: true
+        city_filter: ["groningen"]
+        selectors:
+          listing: "div.card.card-result-list"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: "h5.card-title a"
+          city: ".card-text"
+          price: ".object-price .value"
+          beds: ".object-rooms .value"
+          sqft: ".object-area .value"
+          link: "h5.card-title a"
+
+  zwolle:
+    name: "Zwolle"
+    sources:
+      - name: "pararius"
+        type: "playwright_site"
+        url: "https://www.pararius.com/apartments/zwolle"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "huurwoningen"
+        type: "playwright_site"
+        url: "https://www.huurwoningen.nl/en/in/zwolle/"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "ikwilhuren"
+        type: "generic_css"
+        url: "https://ikwilhuren.nu/aanbod/"
+        page_url_pattern: "{url}?page={page}"
+        max_pages: 25
+        decimal_comma: true
+        city_filter: ["zwolle"]
+        selectors:
+          listing: "div.card-woning"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".card-title a"
+          city: ".card-title + span"
+          price: ".dotted-spans span.fw-bold"
+          sqft: ".dotted-spans > span:has(sup)"
+          beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
+          link: ".card-title a"
+
+      - name: "nederwoon"
+        type: "generic_css"
+        url: "https://www.nederwoon.nl/search?city=Zwolle&search_type=1"
+        decimal_comma: true
+        selectors:
+          listing: "div.location"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          address: "a.see-page-button"
+          city: "p.color-medium.fixed-lh"
+          price: "p.heading-md"
+          sqft: 'li:-soup-contains("Woonoppervlakte")'
+          beds: 'li:-soup-contains("kamer")'
+          link: "a.see-page-button"
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+
+      - name: "bpdwoningfonds"
+        type: "generic_css"
+        url: "https://hurenbij.bpdwoningfonds.nl/aanbod/"
+        decimal_comma: true
+        city_filter: ["zwolle"]
+        selectors:
+          listing: "div.card.card-result-list"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: "h5.card-title a"
+          city: ".card-text"
+          price: ".object-price .value"
+          beds: ".object-rooms .value"
+          sqft: ".object-area .value"
+          link: "h5.card-title a"
