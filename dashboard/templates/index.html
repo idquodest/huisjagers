@@ -7,6 +7,10 @@
   {%- if selected_cities|length > 0 and selected_cities|length < cities|length %} in {{ selected_city_names|join(', ') }}{% endif -%}
 </p>
 
+{% if not session.ntfy_topic_url %}
+  <p class="hint nag">🔔 You haven't set up notifications yet - you won't get pinged about new matches until you do. <a href="/account">Set up notifications →</a></p>
+{% endif %}
+
 {% if unconfigured_city_names %}
   <p class="hint nag">⚠ You haven't set notification filters for {{ unconfigured_city_names|join(', ') }} yet - you won't get pinged for new listings there. <a href="/account">Manage cities →</a></p>
 {% endif %}

@@ -163,7 +163,6 @@ def signup_form(request: Request):
 def signup_submit(
     request: Request,
     email: str = Form(...), password: str = Form(...), invite_code: str = Form(...),
-    ntfy_topic_url: str = Form(""),
 ):
     ctx = {"google_enabled": oauth.is_configured("google")}
     if SIGNUP_INVITE_CODE and invite_code != SIGNUP_INVITE_CODE:
@@ -174,10 +173,7 @@ def signup_submit(
             return templates.TemplateResponse(request, "signup.html", {**ctx, "error": "That email is already registered"}, status_code=400)
 
         now_iso = datetime.now(timezone.utc).isoformat()
-        user_id = db.create_user(
-            conn, email, auth.hash_password(password), now_iso,
-            ntfy_topic_url=ntfy_topic_url or None,
-        )
+        user_id = db.create_user(conn, email, auth.hash_password(password), now_iso)
         token, _ = auth.start_session(conn, user_id)
         conn.commit()
 
