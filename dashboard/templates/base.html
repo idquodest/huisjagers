@@ -114,11 +114,14 @@
     .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
     .auth-card button.primary { width: 100%; }
     body.auth-bg .page {
-      min-height: calc(100vh - 60px);
+      min-height: 100vh;
       display: flex; align-items: center; justify-content: center;
       padding-top: 0; padding-bottom: 0;
     }
     body.auth-bg .auth-card { margin: 0; }
+    .auth-card-header { text-align: center; margin-bottom: 1.5rem; }
+    .auth-card-header h1 { font-size: 1.6rem; margin: 0 0 0.35rem; }
+    .auth-card-header p { color: var(--text-muted); font-size: 0.85rem; margin: 0; }
     .filter-panel {
       background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem;
       box-shadow: 0 8px 30px rgba(91,58,152,0.10); padding: 1rem 1.2rem; margin: 0.5rem 0 1rem;
@@ -172,6 +175,7 @@
   </style>
 </head>
 <body class="{% block body_class %}{% endblock %}">
+  {% block nav %}
   <nav class="topbar">
     <div class="inner">
       <span class="brand">Huisjagers</span>
@@ -189,6 +193,7 @@
       {% endif %}
     </div>
   </nav>
+  {% endblock %}
   <div class="page">
     {% block content %}{% endblock %}
   </div>

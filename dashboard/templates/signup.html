@@ -1,8 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Sign up - Huisjagers{% endblock %}
 {% block body_class %}auth-bg{% endblock %}
+{% block nav %}{% endblock %}
 {% block content %}
 <div class="card auth-card">
+  <div class="auth-card-header">
+    <h1>Huisjagers</h1>
+    <p>Live Dutch rental listings, matched to your filters and pushed straight to your phone.</p>
+  </div>
   <h2>Sign up</h2>
   {% if error %}<div class="error">{{ error }}</div>{% endif %}
   <form method="post" action="/signup">
