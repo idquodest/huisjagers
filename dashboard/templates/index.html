@@ -132,9 +132,16 @@
   </thead>
   <tbody>
     {% for l in listings %}
-    <tr>
+    <tr
+      data-address="{{ l.address or '' }}"
+      data-meta="{{ '€%.0f'|format(l.price) if l.price is not none else '-' }} · {{ l.beds|int if l.beds is not none else 'n/a' }} rooms · {{ l.baths|int if l.baths is not none else 'n/a' }} baths · {{ l.sqft|int if l.sqft else '-' }} m² · {{ l.source }}"
+      data-description="{{ l.description or '' }}"
+      data-maps-url="{% if l.address %}https://www.google.com/maps/search/?api=1&query={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}{% endif %}"
+      data-view-url="{{ l.url }}"
+      data-apply-url="/apply/{{ l.id }}"
+    >
       <td data-label="Address">
-        <button type="button" class="row-toggle" onclick="toggleRow(this, 'detail-{{ l.id }}')" aria-label="Show details">▸</button>
+        <button type="button" class="row-toggle" onclick="openDrawer(this)" aria-label="Show details">▸</button>
         {{ l.address }}
       </td>
       <td data-label="Price">{{ '€%.0f'|format(l.price) if l.price is not none else '-' }}</td>
@@ -152,20 +159,21 @@
         <a class="listing-link" href="/apply/{{ l.id }}">apply</a>
       </td>
     </tr>
-    <tr id="detail-{{ l.id }}" class="detail-row hidden-row">
-      <td colspan="9">
-        {% if l.description %}
-          <p class="listing-detail-label">Description</p>
-          <p class="listing-description">{{ l.description }}</p>
-        {% else %}
-          <p class="hint" style="margin: 0 0 1.1rem;">No description available for this listing.</p>
-        {% endif %}
-        {% if l.address %}
-          <a class="secondary maps-link" href="https://www.google.com/maps/search/?api=1&query={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}" target="_blank" rel="noopener noreferrer">📍 Open in Google Maps</a>
-        {% endif %}
-      </td>
-    </tr>
     {% endfor %}
   </tbody>
 </table>
+
+<div id="listing-drawer-overlay" class="drawer-overlay" onclick="closeDrawer()"></div>
+<div id="listing-drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-address">
+  <button type="button" class="drawer-close" onclick="closeDrawer()" aria-label="Close">&times;</button>
+  <h2 id="drawer-address"></h2>
+  <p id="drawer-meta" class="hint"></p>
+  <p class="listing-detail-label">Description</p>
+  <p id="drawer-description" class="listing-description"></p>
+  <div class="drawer-actions">
+    <a id="drawer-maps" class="secondary maps-link" target="_blank" rel="noopener noreferrer">📍 Open in Google Maps</a>
+    <a id="drawer-view" class="listing-link" target="_blank" rel="noopener noreferrer">View original listing →</a>
+    <a id="drawer-apply" class="listing-link">Apply →</a>
+  </div>
+</div>
 {% endblock %}
