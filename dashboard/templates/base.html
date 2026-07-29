@@ -173,9 +173,24 @@
     .filter-panel summary { cursor: pointer; font-size: 0.85rem; color: var(--blue); font-weight: 500; }
     .filter-actions { display: flex; gap: 0.75rem; margin-top: 0.85rem; flex-wrap: wrap; align-items: center; }
     .filter-status { margin: 0.6rem 0 0; }
-    .apply-to { display: flex; gap: 0.9rem; align-items: center; flex-wrap: wrap; margin-top: 0.85rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
-    .apply-to-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
-    .apply-to-option { font-size: 0.9rem; display: flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+    .dropdown-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.1rem; }
+    .dropdown-check { position: relative; }
+    .dropdown-check summary {
+      list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.5rem 0.9rem; border: 1px solid var(--border-strong); border-radius: 0.5rem;
+      background: var(--card-soft); font-size: 0.85rem; font-weight: 600; color: var(--text); user-select: none;
+    }
+    .dropdown-check summary::-webkit-details-marker { display: none; }
+    .dropdown-check summary::after { content: "▾"; margin-left: 0.15rem; color: var(--text-muted); font-size: 0.7rem; }
+    .dropdown-check summary span { font-weight: 400; color: var(--text-muted); }
+    .dropdown-check[open] summary { border-color: var(--violet); }
+    .dropdown-check-panel {
+      position: absolute; top: calc(100% + 0.4rem); left: 0; z-index: 15; min-width: 210px; max-height: 280px; overflow-y: auto;
+      background: var(--card); border: 1px solid var(--border); border-radius: 0.6rem;
+      box-shadow: 0 12px 30px rgba(42,23,64,0.18); padding: 0.6rem 0.75rem;
+      display: flex; flex-direction: column; gap: 0.4rem;
+    }
+    .dropdown-check-option { font-size: 0.87rem; display: flex; align-items: center; gap: 0.45rem; white-space: nowrap; cursor: pointer; color: var(--text); }
     .error { color: var(--red); background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); border-radius: 0.5rem; padding: 0.6rem 0.85rem; margin-bottom: 1rem; }
     p.nag {
       color: var(--amber); background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 0.5rem;
@@ -239,6 +254,14 @@
     {% block content %}{% endblock %}
   </div>
   <script>
+    function updateDropdownSummary(checkbox, suffix) {
+      const details = checkbox.closest('details');
+      if (!details) return;
+      const summarySpan = details.querySelector('summary span');
+      const checked = details.querySelectorAll('input[type=checkbox]:checked').length;
+      summarySpan.textContent = checked + ' ' + suffix;
+    }
+
     function openDrawer(btn) {
       const row = btn.closest('tr');
       const drawer = document.getElementById('listing-drawer');

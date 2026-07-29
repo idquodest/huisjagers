@@ -18,6 +18,29 @@
 <div class="filter-panel">
   <form method="get" action="/">
     <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <div class="dropdown-row">
+      <details class="dropdown-check">
+        <summary>Cities: <span>{{ selected_cities|length }} of {{ cities|length }}</span></summary>
+        <div class="dropdown-check-panel">
+          {% for key, name in cities.items() %}
+            <label class="dropdown-check-option">
+              <input type="checkbox" name="cities" value="{{ key }}" {% if key in selected_cities %}checked{% endif %} onchange="updateDropdownSummary(this, '{{ cities|length }} of')"> {{ name }}
+            </label>
+          {% endfor %}
+        </div>
+      </details>
+      <details class="dropdown-check">
+        <summary>Hide sources: <span>{{ (filters.excluded_sources|length) if filters and filters.excluded_sources else 0 }} hidden</span></summary>
+        <div class="dropdown-check-panel">
+          {% for source in all_sources %}
+            <label class="dropdown-check-option">
+              <input type="checkbox" name="excluded_sources" value="{{ source }}" {% if filters and source in filters.excluded_sources %}checked{% endif %} onchange="updateDropdownSummary(this, 'hidden')"> {{ source }}
+            </label>
+          {% endfor %}
+        </div>
+      </details>
+      <span class="hint">Cities controls what's shown and where "Save" applies. Hide sources stops seeing (and being notified about) a site entirely.</span>
+    </div>
     <div class="filter-row">
       <div class="field">
         <label>Price min (€)</label>
@@ -67,24 +90,6 @@
         </div>
       </div>
     </details>
-    <div class="apply-to">
-      <span class="apply-to-label">Cities:</span>
-      {% for key, name in cities.items() %}
-        <label class="apply-to-option">
-          <input type="checkbox" name="cities" value="{{ key }}" {% if key in selected_cities %}checked{% endif %}> {{ name }}
-        </label>
-      {% endfor %}
-      <span class="hint">Controls both what's shown below and where "Save" applies.</span>
-    </div>
-    <div class="apply-to">
-      <span class="apply-to-label">Hide sources:</span>
-      {% for source in all_sources %}
-        <label class="apply-to-option">
-          <input type="checkbox" name="excluded_sources" value="{{ source }}" {% if filters and source in filters.excluded_sources %}checked{% endif %}> {{ source }}
-        </label>
-      {% endfor %}
-      <span class="hint">Check a site to stop seeing (and being notified about) its listings entirely.</span>
-    </div>
     <div class="filter-actions">
       <button class="secondary" type="submit">Show results</button>
       <button class="primary" type="submit" formmethod="post" formaction="/notification-filters">Save as my notification filters</button>
