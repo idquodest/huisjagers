@@ -12,7 +12,7 @@
   <style>
     :root {
       --bg: #eef3fc;
-      --card: #ffffff;
+      --card: rgba(255,255,255,0.86);
       --card-soft: #e4ebfb;
       --border: rgba(91,58,152,0.14);
       --border-strong: rgba(91,58,152,0.28);
@@ -54,12 +54,13 @@
     form.filters { margin: 1rem 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
     table {
       width: 100%; border-collapse: collapse; background: var(--card);
-      border: 1px solid var(--border); border-radius: 0.75rem; overflow: hidden;
-      box-shadow: 0 8px 30px rgba(91,58,152,0.10);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.5); border-radius: 1.1rem; overflow: hidden;
+      box-shadow: 0 16px 45px rgba(42,23,64,0.16);
     }
     th, td { text-align: left; padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--border); font-size: 0.87rem; overflow-wrap: break-word; }
     th {
-      background: var(--card-soft); color: var(--text-muted); padding: 0;
+      background: rgba(228,235,251,0.7); color: var(--text-muted); padding: 0;
       font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em;
     }
     a.sort-link { display: block; padding: 0.75rem 0.85rem; color: inherit; text-decoration: none; }
@@ -71,8 +72,9 @@
     .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 1rem; font-size: 0.7rem; font-weight: 600; }
     .badge.pet { background: rgba(139,92,246,0.18); color: var(--violet-bright); }
     .card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem;
-      box-shadow: 0 8px 30px rgba(91,58,152,0.10); padding: 1.9rem 2.1rem; margin: 1.1rem 0;
+      background: var(--card); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.5); border-radius: 1.1rem;
+      box-shadow: 0 16px 45px rgba(42,23,64,0.16); padding: 1.9rem 2.1rem; margin: 1.1rem 0;
     }
     .card h2 { margin-top: 0; font-size: 1.1rem; }
     code {
@@ -127,8 +129,9 @@
     .auth-card-header h1 { font-size: 1.6rem; margin: 0 0 0.35rem; }
     .auth-card-header p { color: var(--text-muted); font-size: 0.85rem; margin: 0; }
     .filter-panel {
-      background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem;
-      box-shadow: 0 8px 30px rgba(91,58,152,0.10); padding: 1.6rem 1.9rem; margin: 0.5rem 0 1rem;
+      background: var(--card); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.5); border-radius: 1.1rem;
+      box-shadow: 0 16px 45px rgba(42,23,64,0.16); padding: 1.6rem 1.9rem; margin: 0.5rem 0 1rem;
     }
     .filter-panel .filter-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; margin-bottom: 0; }
     .filter-panel .field { min-width: 100px; flex: 1; }
