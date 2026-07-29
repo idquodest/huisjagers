@@ -102,6 +102,17 @@
     a.link-plain:hover { color: var(--violet-bright); }
     .input-with-button { display: flex; gap: 0.5rem; align-items: center; }
     .input-with-button input { flex: 1; }
+    .google-btn {
+      display: flex; align-items: center; justify-content: center; gap: 0.65rem;
+      width: 100%; padding: 0.65rem 1rem; background: #fff; color: #3c4043;
+      border: 1px solid var(--border-strong); border-radius: 0.5rem;
+      font: inherit; font-weight: 600; font-size: 0.95rem; cursor: pointer;
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+    .google-btn:hover { box-shadow: 0 2px 8px rgba(42,23,64,0.18); }
+    .auth-divider { display: flex; align-items: center; gap: 0.75rem; margin: 1.1rem 0; color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+    .auth-card button.primary { width: 100%; }
     .filter-panel {
       background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem;
       box-shadow: 0 8px 30px rgba(91,58,152,0.10); padding: 1rem 1.2rem; margin: 0.5rem 0 1rem;
