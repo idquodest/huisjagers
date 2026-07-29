@@ -133,7 +133,10 @@
   <tbody>
     {% for l in listings %}
     <tr>
-      <td data-label="Address">{{ l.address }}</td>
+      <td data-label="Address">
+        <button type="button" class="row-toggle" onclick="toggleRow(this, 'detail-{{ l.id }}')" aria-label="Show details">▸</button>
+        {{ l.address }}
+      </td>
       <td data-label="Price">{{ '€%.0f'|format(l.price) if l.price is not none else '-' }}</td>
       <td data-label="Rooms">{{ l.beds|int if l.beds is not none else 'n/a' }}</td>
       <td data-label="Bathrooms">{{ l.baths|int if l.baths is not none else 'n/a' }}</td>
@@ -147,6 +150,18 @@
       <td data-label="">
         <a class="listing-link" href="{{ l.url }}" target="_blank" rel="noopener noreferrer">view</a>
         <a class="listing-link" href="/apply/{{ l.id }}">apply</a>
+      </td>
+    </tr>
+    <tr id="detail-{{ l.id }}" class="detail-row hidden-row">
+      <td colspan="9">
+        {% if l.description %}
+          <p class="listing-description">{{ l.description }}</p>
+        {% else %}
+          <p class="hint" style="margin: 0 0 0.5rem;">No description available for this listing.</p>
+        {% endif %}
+        {% if l.address %}
+          <a class="link-plain" href="https://www.google.com/maps/search/?api=1&query={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}" target="_blank" rel="noopener noreferrer">Open in Google Maps →</a>
+        {% endif %}
       </td>
     </tr>
     {% endfor %}
