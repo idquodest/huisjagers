@@ -29,11 +29,15 @@
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       margin: 0; color: var(--text);
-      background-color: var(--bg);
+      background-color: #2a1740;
       background-image:
-        radial-gradient(ellipse 900px 500px at 20% -10%, rgba(124,79,190,0.14), transparent 60%),
-        radial-gradient(ellipse 700px 500px at 100% 10%, rgba(61,86,214,0.08), transparent 60%);
+        linear-gradient(rgba(42,23,64,0.55), rgba(42,23,64,0.55)),
+        url('/static/main-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
       background-repeat: no-repeat;
+      min-height: 100vh;
     }
     .page { max-width: 960px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
     h1, h2 { font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
