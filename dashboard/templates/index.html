@@ -145,10 +145,7 @@
       data-view-url="{{ l.url }}"
       data-apply-url="/apply/{{ l.id }}"
     >
-      <td data-label="Address">
-        <button type="button" class="row-toggle" onclick="openDrawer(this)" aria-label="Show details">▸</button>
-        {{ l.address }}
-      </td>
+      <td data-label="Address">{{ l.address }}</td>
       <td data-label="Price">{{ '€%.0f'|format(l.price) if l.price is not none else '-' }}</td>
       <td data-label="Rooms">{{ l.beds|int if l.beds is not none else 'n/a' }}</td>
       <td data-label="Bathrooms">{{ l.baths|int if l.baths is not none else 'n/a' }}</td>
@@ -160,6 +157,7 @@
       </td>
       <td data-label="First Seen">{{ l.first_seen }}</td>
       <td data-label="">
+        <button type="button" class="secondary see-more-btn" onclick="openDrawer(this)">See more</button>
         <a class="listing-link" href="{{ l.url }}" target="_blank" rel="noopener noreferrer">view</a>
         <a class="listing-link" href="/apply/{{ l.id }}">apply</a>
       </td>
