@@ -52,6 +52,7 @@ cities:
           # build years as "beds" on some listings.
           beds: 'div.mobileHideLabel:has(span.label:-soup-contains("Kamers")) span.value'
           sqft: 'div.mobileHideLabel:has(span.label:-soup-contains("Woonopp")) span.value'
+          description: 'h4:-soup-contains("Omschrijving") + div'
         # Parking isn't on the summary card, only each listing's own page -
         # this costs one extra page load per listing during scraping.
         detail_amenities:
@@ -129,6 +130,7 @@ cities:
           sqft: ".dotted-spans > span:has(sup)"
           beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
           link: ".card-title a"
+          description: "h2.mb-4 + p"
 
       # nederwoon.nl is plain static HTML (generic_css). The search form
       # posts to /search?city=<name>&search_type=1 (1 = Huurwoning/rental).
@@ -153,6 +155,7 @@ cities:
           # specifically.
           beds: 'li:-soup-contains("kamer")'
           link: "a.see-page-button"
+          description: ".description-content"
           amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
 
       # hurenbij.bpdwoningfonds.nl is plain static HTML (generic_css). It
@@ -178,6 +181,7 @@ cities:
           beds: ".object-rooms .value"
           sqft: ".object-area .value"
           link: "h5.card-title a"
+          description: 'div.card-header:-soup-contains("Omschrijving") + div.card-body'
 
   amersfoort:
     name: "Amersfoort"
@@ -199,6 +203,7 @@ cities:
           price: "h6.price"
           beds: 'div.mobileHideLabel:has(span.label:-soup-contains("Kamers")) span.value'
           sqft: 'div.mobileHideLabel:has(span.label:-soup-contains("Woonopp")) span.value'
+          description: 'h4:-soup-contains("Omschrijving") + div'
         detail_amenities:
           - selector: 'li.listItem:has(div.label:-soup-contains("Parkeerfaciliteiten")) div.value'
             label: "parking"
@@ -250,6 +255,7 @@ cities:
           sqft: ".dotted-spans > span:has(sup)"
           beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
           link: ".card-title a"
+          description: "h2.mb-4 + p"
 
       - name: "nederwoon"
         type: "generic_css"
@@ -264,6 +270,7 @@ cities:
           sqft: 'li:-soup-contains("Woonoppervlakte")'
           beds: 'li:-soup-contains("kamer")'
           link: "a.see-page-button"
+          description: ".description-content"
           amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
 
       - name: "bpdwoningfonds"
@@ -281,6 +288,7 @@ cities:
           beds: ".object-rooms .value"
           sqft: ".object-area .value"
           link: "h5.card-title a"
+          description: 'div.card-header:-soup-contains("Omschrijving") + div.card-body'
 
   hilversum:
     name: "Hilversum"
@@ -302,6 +310,7 @@ cities:
           price: "h6.price"
           beds: 'div.mobileHideLabel:has(span.label:-soup-contains("Kamers")) span.value'
           sqft: 'div.mobileHideLabel:has(span.label:-soup-contains("Woonopp")) span.value'
+          description: 'h4:-soup-contains("Omschrijving") + div'
         detail_amenities:
           - selector: 'li.listItem:has(div.label:-soup-contains("Parkeerfaciliteiten")) div.value'
             label: "parking"
@@ -353,6 +362,7 @@ cities:
           sqft: ".dotted-spans > span:has(sup)"
           beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
           link: ".card-title a"
+          description: "h2.mb-4 + p"
 
       # No city_filter: nederwoon's search is a "nearby area" search - a
       # "Hilversum" search here actually returns Naarden listings, kept
@@ -370,6 +380,7 @@ cities:
           sqft: 'li:-soup-contains("Woonoppervlakte")'
           beds: 'li:-soup-contains("kamer")'
           link: "a.see-page-button"
+          description: ".description-content"
           amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
 
       - name: "bpdwoningfonds"
@@ -387,6 +398,7 @@ cities:
           beds: ".object-rooms .value"
           sqft: ".object-area .value"
           link: "h5.card-title a"
+          description: 'div.card-header:-soup-contains("Omschrijving") + div.card-body'
 
   # Rotterdam / Amsterdam / The Hague / Groningen / Zwolle added on top of the
   # original 3 cities. Same 6 sources where each one actually covers the
@@ -412,6 +424,7 @@ cities:
           price: "h6.price"
           beds: 'div.mobileHideLabel:has(span.label:-soup-contains("Kamers")) span.value'
           sqft: 'div.mobileHideLabel:has(span.label:-soup-contains("Woonopp")) span.value'
+          description: 'h4:-soup-contains("Omschrijving") + div'
         detail_amenities:
           - selector: 'li.listItem:has(div.label:-soup-contains("Parkeerfaciliteiten")) div.value'
             label: "parking"
@@ -463,6 +476,7 @@ cities:
           sqft: ".dotted-spans > span:has(sup)"
           beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
           link: ".card-title a"
+          description: "h2.mb-4 + p"
 
       - name: "nederwoon"
         type: "generic_css"
@@ -477,6 +491,7 @@ cities:
           sqft: 'li:-soup-contains("Woonoppervlakte")'
           beds: 'li:-soup-contains("kamer")'
           link: "a.see-page-button"
+          description: ".description-content"
           amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
 
       - name: "bpdwoningfonds"
@@ -494,6 +509,7 @@ cities:
           beds: ".object-rooms .value"
           sqft: ".object-area .value"
           link: "h5.card-title a"
+          description: 'div.card-header:-soup-contains("Omschrijving") + div.card-body'
 
   amsterdam:
     name: "Amsterdam"
@@ -515,6 +531,7 @@ cities:
           price: "h6.price"
           beds: 'div.mobileHideLabel:has(span.label:-soup-contains("Kamers")) span.value'
           sqft: 'div.mobileHideLabel:has(span.label:-soup-contains("Woonopp")) span.value'
+          description: 'h4:-soup-contains("Omschrijving") + div'
         detail_amenities:
           - selector: 'li.listItem:has(div.label:-soup-contains("Parkeerfaciliteiten")) div.value'
             label: "parking"
@@ -566,6 +583,7 @@ cities:
           sqft: ".dotted-spans > span:has(sup)"
           beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
           link: ".card-title a"
+          description: "h2.mb-4 + p"
 
       - name: "nederwoon"
         type: "generic_css"
@@ -580,6 +598,7 @@ cities:
           sqft: 'li:-soup-contains("Woonoppervlakte")'
           beds: 'li:-soup-contains("kamer")'
           link: "a.see-page-button"
+          description: ".description-content"
           amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
 
       - name: "bpdwoningfonds"
@@ -597,6 +616,7 @@ cities:
           beds: ".object-rooms .value"
           sqft: ".object-area .value"
           link: "h5.card-title a"
+          description: 'div.card-header:-soup-contains("Omschrijving") + div.card-body'
 
   # Dutch sites disagree on this city's name - pararius/huurwoningen use the
   # URL slug "den-haag", rebogroep's dropdown only offers the formal
@@ -624,6 +644,7 @@ cities:
           price: "h6.price"
           beds: 'div.mobileHideLabel:has(span.label:-soup-contains("Kamers")) span.value'
           sqft: 'div.mobileHideLabel:has(span.label:-soup-contains("Woonopp")) span.value'
+          description: 'h4:-soup-contains("Omschrijving") + div'
         detail_amenities:
           - selector: 'li.listItem:has(div.label:-soup-contains("Parkeerfaciliteiten")) div.value'
             label: "parking"
@@ -675,6 +696,7 @@ cities:
           sqft: ".dotted-spans > span:has(sup)"
           beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
           link: ".card-title a"
+          description: "h2.mb-4 + p"
 
       - name: "nederwoon"
         type: "generic_css"
@@ -689,6 +711,7 @@ cities:
           sqft: 'li:-soup-contains("Woonoppervlakte")'
           beds: 'li:-soup-contains("kamer")'
           link: "a.see-page-button"
+          description: ".description-content"
           amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
 
       - name: "bpdwoningfonds"
@@ -706,6 +729,7 @@ cities:
           beds: ".object-rooms .value"
           sqft: ".object-area .value"
           link: "h5.card-title a"
+          description: 'div.card-header:-soup-contains("Omschrijving") + div.card-body'
 
   # No rebogroep here - its "Plaats" dropdown (checked live) simply doesn't
   # list Groningen or Zwolle as options, unlike the other 6 cities.
@@ -759,6 +783,7 @@ cities:
           sqft: ".dotted-spans > span:has(sup)"
           beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
           link: ".card-title a"
+          description: "h2.mb-4 + p"
 
       - name: "nederwoon"
         type: "generic_css"
@@ -773,6 +798,7 @@ cities:
           sqft: 'li:-soup-contains("Woonoppervlakte")'
           beds: 'li:-soup-contains("kamer")'
           link: "a.see-page-button"
+          description: ".description-content"
           amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
 
       - name: "bpdwoningfonds"
@@ -790,6 +816,7 @@ cities:
           beds: ".object-rooms .value"
           sqft: ".object-area .value"
           link: "h5.card-title a"
+          description: 'div.card-header:-soup-contains("Omschrijving") + div.card-body'
 
   zwolle:
     name: "Zwolle"
@@ -841,6 +868,7 @@ cities:
           sqft: ".dotted-spans > span:has(sup)"
           beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
           link: ".card-title a"
+          description: "h2.mb-4 + p"
 
       - name: "nederwoon"
         type: "generic_css"
@@ -855,6 +883,7 @@ cities:
           sqft: 'li:-soup-contains("Woonoppervlakte")'
           beds: 'li:-soup-contains("kamer")'
           link: "a.see-page-button"
+          description: ".description-content"
           amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
 
       - name: "bpdwoningfonds"
@@ -872,3 +901,4 @@ cities:
           beds: ".object-rooms .value"
           sqft: ".object-area .value"
           link: "h5.card-title a"
+          description: 'div.card-header:-soup-contains("Omschrijving") + div.card-body'

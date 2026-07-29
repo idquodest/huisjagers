@@ -5,7 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from models import Listing
-from text_utils import find_keyword_matches
+from text_utils import extract_description, find_keyword_matches
 from .base import Scraper
 
 _NUMBER_RE = re.compile(r"[\d,.]+")
@@ -54,6 +54,7 @@ class GenericCssScraper(Scraper):
     def fetch(
         self, city_key: str, source_cfg: dict, known_listings: dict[str, dict] | None = None
     ) -> list[Listing]:
+        known_listings = known_listings or {}
         url = source_cfg["url"]
         selectors = source_cfg["selectors"]
         source_name = source_cfg["name"]
@@ -65,6 +66,9 @@ class GenericCssScraper(Scraper):
         page_url_pattern = source_cfg.get("page_url_pattern")
         max_pages = source_cfg.get("max_pages", 1)
         decimal_comma = source_cfg.get("decimal_comma", False)
+        # The listing's own written blurb only exists on its detail page,
+        # never the summary card - see _fetch_description.
+        description_selector = selectors.get("description")
 
         listings = []
         for page_num in range(1, max_pages + 1):
@@ -88,7 +92,35 @@ class GenericCssScraper(Scraper):
             if not page_url_pattern:
                 break
 
+        if description_selector:
+            for listing in listings:
+                # Already-seen listings keep whatever description was found
+                # the first time, instead of paying for another page load
+                # every single cycle - it doesn't change run to run.
+                if listing.id in known_listings:
+                    known_description = known_listings[listing.id]["description"]
+                    if known_description:
+                        listing.description = known_description
+                else:
+                    described = self._fetch_description(listing.url, description_selector)
+                    if described:
+                        listing.description = described
+
         return listings
+
+    def _fetch_description(self, detail_url: str, description_selector: str) -> str:
+        try:
+            resp = requests.get(
+                detail_url,
+                headers={"User-Agent": "Mozilla/5.0 (apartment-finder personal use)"},
+                timeout=15,
+            )
+            resp.raise_for_status()
+        except requests.RequestException:
+            return ""
+        soup = BeautifulSoup(resp.text, "html.parser")
+        el = soup.select_one(description_selector)
+        return extract_description(el) if el else ""
 
     def _parse_cards(self, cards, selectors, source_name, city_key, url, city_filter, decimal_comma):
         listings = []

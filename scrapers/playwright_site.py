@@ -6,7 +6,7 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from playwright.sync_api import sync_playwright
 
 from models import Listing
-from text_utils import find_keyword_matches
+from text_utils import extract_description, find_keyword_matches
 from .base import Scraper
 
 _NUMBER_RE = re.compile(r"[\d,.]+")
@@ -291,21 +291,6 @@ class PlaywrightSiteScraper(Scraper):
             _add_amenities(found, find_keyword_matches(page_text.lower(), amenity_keywords))
 
         if description_selector:
-            return found, self._extract_first_paragraph(soup, description_selector)
+            el = soup.select_one(description_selector)
+            return found, (extract_description(el) if el else "")
         return found, page_text
-
-    def _extract_first_paragraph(self, soup, description_selector: str) -> str:
-        el = soup.select_one(description_selector)
-        if not el:
-            return ""
-        text = el.get_text(" ", strip=True)
-        # Sites often duplicate their own section heading ("Description")
-        # into the leading text of the content block itself.
-        if text.lower().startswith("description"):
-            text = text[len("description"):].lstrip(" :–-")
-        # Agencies write the blurb as one text node with real embedded
-        # newlines for paragraph breaks (not separate <p> tags) - split on
-        # those rather than truncating by character count, so a paragraph
-        # never gets cut off mid-sentence.
-        paragraphs = [p.strip() for p in re.split(r"\n{2,}", text) if p.strip()]
-        return paragraphs[0] if paragraphs else ""
