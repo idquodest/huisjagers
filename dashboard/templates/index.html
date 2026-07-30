@@ -151,7 +151,7 @@
       data-meta="{{ '€%.0f'|format(l.price) if l.price is not none else '-' }} · {{ l.beds|int if l.beds is not none else 'n/a' }} rooms · {{ l.sqft|int if l.sqft else '-' }} m² · {{ l.source|capitalize }}"
       data-description="{{ l.description or '' }}"
       data-maps-url="{% if l.address %}https://www.google.com/maps/search/?api=1&query={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}{% endif %}"
-      data-map-embed-url="{% if l.address %}https://www.google.com/maps?q={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}&z=15&output=embed{% endif %}"
+      data-map-embed-url="{% if l.address %}https://www.google.com/maps?q={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}&z=13&output=embed{% endif %}"
       data-view-url="{{ l.url }}"
       data-apply-url="/apply/{{ l.id }}"
     >
