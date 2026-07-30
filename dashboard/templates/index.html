@@ -1,6 +1,20 @@
 {% extends "base.html" %}
 {% block title %}Hunter - Huisjagers{% endblock %}
 {% block content %}
+<script>
+  // Remember the last filter state for this tab/session so navigating away
+  // (Notifications, Templates) and back via the nav link doesn't reset the
+  // view to "all listings, unfiltered" - only an explicit action (typing
+  // new filters, "Reset to saved filters") should change what's shown.
+  (function () {
+    if (window.location.search) {
+      sessionStorage.setItem('hunterFilters', window.location.search);
+    } else {
+      var saved = sessionStorage.getItem('hunterFilters');
+      if (saved) window.location.replace('/' + saved);
+    }
+  })();
+</script>
 {% if not session.ntfy_topic_url %}
   <p class="hint nag">🔔 You haven't set up notifications yet - you won't get pinged about new matches until you do. <a href="/account">Set up notifications →</a></p>
 {% endif %}
