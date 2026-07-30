@@ -134,7 +134,7 @@
       {{ sort_th('price', 'Price') }}
       {{ sort_th('beds', 'Rooms') }}
       {{ sort_th('baths', 'Bathrooms') }}
-      {{ sort_th('sqft', 'm²') }}
+      {{ sort_th('sqft', 'Size (m²)') }}
       {{ sort_th('source', 'Source') }}
       <th>Amenities</th>
       {{ sort_th('first_seen', 'First Seen') }}
@@ -145,27 +145,30 @@
     {% for l in listings %}
     <tr
       data-address="{{ l.address or '' }}"
-      data-meta="{{ '€%.0f'|format(l.price) if l.price is not none else '-' }} · {{ l.beds|int if l.beds is not none else 'n/a' }} rooms · {{ l.baths|int if l.baths is not none else 'n/a' }} baths · {{ l.sqft|int if l.sqft else '-' }} m² · {{ l.source }}"
+      data-meta="{{ '€%.0f'|format(l.price) if l.price is not none else '-' }} · {{ l.beds|int if l.beds is not none else 'n/a' }} rooms · {{ l.baths|int if l.baths is not none else 'n/a' }} baths · {{ l.sqft|int if l.sqft else '-' }} m² · {{ l.source|capitalize }}"
       data-description="{{ l.description or '' }}"
       data-maps-url="{% if l.address %}https://www.google.com/maps/search/?api=1&query={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}{% endif %}"
       data-view-url="{{ l.url }}"
       data-apply-url="/apply/{{ l.id }}"
     >
-      <td data-label="Address">{{ l.address }}</td>
+      <td data-label="Address">
+        <a class="address-link" href="{{ l.url }}" target="_blank" rel="noopener noreferrer">{{ l.address }}</a>
+      </td>
       <td data-label="Price">{{ '€%.0f'|format(l.price) if l.price is not none else '-' }}</td>
       <td data-label="Rooms">{{ l.beds|int if l.beds is not none else 'n/a' }}</td>
       <td data-label="Bathrooms">{{ l.baths|int if l.baths is not none else 'n/a' }}</td>
-      <td data-label="m²">{{ l.sqft|int if l.sqft else '-' }}</td>
-      <td data-label="Source">{{ l.source }}</td>
+      <td data-label="Size (m²)">{{ '%dm²'|format(l.sqft|int) if l.sqft else '-' }}</td>
+      <td data-label="Source">{{ l.source|capitalize }}</td>
       <td data-label="Amenities" class="amenities">
         {{ l.amenities|map('title')|join(', ') }}
         {% if l.pet_friendly %}<span class="badge pet">pet-friendly</span>{% endif %}
       </td>
-      <td data-label="First Seen">{{ l.first_seen }}</td>
+      <td data-label="First Seen">
+        {% set date_part, time_part = l.first_seen.split(' ') if l.first_seen else ('', '') %}
+        {{ date_part }}<br>{{ time_part }}
+      </td>
       <td data-label="">
         <button type="button" class="secondary see-more-btn" onclick="openDrawer(this)">See more</button>
-        <a class="listing-link" href="{{ l.url }}" target="_blank" rel="noopener noreferrer">view</a>
-        <a class="listing-link" href="/apply/{{ l.id }}">apply</a>
       </td>
     </tr>
     {% endfor %}

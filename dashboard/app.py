@@ -60,7 +60,7 @@ def _ensure_schema() -> None:
 def _to_local(iso_str: str | None) -> str:
     if not iso_str:
         return ""
-    return datetime.fromisoformat(iso_str).astimezone(_LOCAL_TZ).strftime("%Y-%m-%d %H:%M")
+    return datetime.fromisoformat(iso_str).astimezone(_LOCAL_TZ).strftime("%d/%m/%Y %H:%M")
 
 
 def _set_session_cookie(response, token: str) -> None:
