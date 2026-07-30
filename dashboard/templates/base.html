@@ -251,8 +251,8 @@
       <span class="brand">Huisjagers</span>
       {% if session %}
         <a href="/">Hunter</a>
+        <a href="/account">Notifications</a>
         <a href="/templates">Templates</a>
-        <a href="/account">Account</a>
         <form method="post" action="/logout">
           <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
           <button class="link" type="submit">Logout ({{ session.email }})</button>

@@ -570,16 +570,6 @@ def index(request: Request):
             saved_summary = db.preferences_row_to_dict(pref_rows[0]) if pref_rows else None
             filters_are_saved = filters == saved_summary
 
-        # Cities with no saved-preferences row at all - not "opted out"
-        # (that's a deliberate row with enabled=0, see db.set_city_enabled),
-        # genuinely never touched. Worth a gentle nag since it's otherwise
-        # indistinguishable from "I don't care about this city" and easy to
-        # forget you never finished setting up.
-        settings_by_city = db.get_all_user_city_settings(conn, session["user_id"])
-        unconfigured_city_names = [
-            cfg.get("name", key) for key, cfg in config["cities"].items() if key not in settings_by_city
-        ]
-
     listings = []
     for row in matched_rows:
         listings.append({
@@ -619,6 +609,5 @@ def index(request: Request):
             "filters": filters,
             "filters_are_saved": filters_are_saved,
             "saved_summary": saved_summary,
-            "unconfigured_city_names": unconfigured_city_names,
         },
     )
