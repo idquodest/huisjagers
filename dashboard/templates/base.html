@@ -204,9 +204,13 @@
       display: flex; flex-direction: column; gap: 0.4rem;
     }
     .dropdown-check-option { font-size: 0.87rem; display: flex; align-items: center; gap: 0.45rem; white-space: nowrap; cursor: pointer; color: var(--text); }
-    .error { color: var(--red); background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); border-radius: 0.5rem; padding: 0.6rem 0.85rem; margin-bottom: 1rem; }
+    /* Solid (not translucent) backgrounds here on purpose - these sit
+       directly on the photo background, not inside a white card, so a
+       low-opacity tint can't guarantee WCAG AA contrast against whatever
+       part of the photo happens to be behind it. */
+    .error { color: var(--red); background: #fde2e2; border: 1px solid #f3a5a5; border-radius: 0.5rem; padding: 0.6rem 0.85rem; margin-bottom: 1rem; }
     p.nag {
-      color: var(--amber); background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 0.5rem;
+      color: var(--amber); background: #fdecc8; border: 1px solid #f0c977; border-radius: 0.5rem;
       padding: 0.6rem 0.85rem; font-size: 0.85rem;
     }
     p.nag a { color: var(--amber); font-weight: 700; }
