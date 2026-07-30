@@ -148,9 +148,10 @@
     {% for l in listings %}
     <tr
       data-address="{{ l.address or '' }}"
-      data-meta="{{ '€%.0f'|format(l.price) if l.price is not none else '-' }} · {{ l.beds|int if l.beds is not none else 'n/a' }} rooms · {{ l.baths|int if l.baths is not none else 'n/a' }} baths · {{ l.sqft|int if l.sqft else '-' }} m² · {{ l.source|capitalize }}"
+      data-meta="{{ '€%.0f'|format(l.price) if l.price is not none else '-' }} · {{ l.beds|int if l.beds is not none else 'n/a' }} rooms · {{ l.sqft|int if l.sqft else '-' }} m² · {{ l.source|capitalize }}"
       data-description="{{ l.description or '' }}"
       data-maps-url="{% if l.address %}https://www.google.com/maps/search/?api=1&query={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}{% endif %}"
+      data-map-embed-url="{% if l.address %}https://www.google.com/maps?q={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}&z=15&output=embed{% endif %}"
       data-view-url="{{ l.url }}"
       data-apply-url="/apply/{{ l.id }}"
     >
@@ -183,10 +184,13 @@
   <button type="button" class="drawer-close" onclick="closeDrawer()" aria-label="Close">&times;</button>
   <h2 id="drawer-address"></h2>
   <p id="drawer-meta" class="hint"></p>
-  <p class="listing-detail-label">Description</p>
+  <div id="drawer-map-wrap" class="drawer-map-wrap">
+    <iframe id="drawer-map" class="drawer-map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Map"></iframe>
+  </div>
+  <a id="drawer-map-address" class="address-link drawer-map-address" target="_blank" rel="noopener noreferrer">📍</a>
+  <p class="listing-detail-label" style="margin-top: 1.3rem;">Description</p>
   <p id="drawer-description" class="listing-description"></p>
   <div class="drawer-actions">
-    <a id="drawer-maps" class="secondary maps-link" target="_blank" rel="noopener noreferrer">📍 Open in Google Maps</a>
     <a id="drawer-view" class="listing-link" target="_blank" rel="noopener noreferrer">View original listing →</a>
     <a id="drawer-apply" class="listing-link">Apply →</a>
   </div>
