@@ -19,11 +19,11 @@
       --text: #2a1740;
       --text-muted: #6b5f84;
       --violet: #63389e;
-      --violet-bright: #7c4fbe;
+      --violet-bright: #5b3494;
       --blue: #3d56d6;
-      --green: #16a34a;
-      --amber: #d97706;
-      --red: #dc2626;
+      --green: #0f6b32;
+      --amber: #8a5200;
+      --red: #b91c1c;
     }
     * { box-sizing: border-box; }
     body {
@@ -52,11 +52,14 @@
     nav.topbar button.link { background: none; border: none; color: var(--text-muted); font: inherit; font-size: 0.9rem; font-weight: 500; cursor: pointer; padding: 0; text-decoration: none; }
     nav.topbar button.link:hover { color: var(--text); }
     form.filters { margin: 1rem 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    .table-scroll {
+      max-width: 100%; overflow-x: auto; border-radius: 1.1rem;
+      box-shadow: 0 16px 45px rgba(42,23,64,0.16);
+    }
     table {
       width: 100%; border-collapse: collapse; background: var(--card);
       backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
       border: 1px solid rgba(255,255,255,0.5); border-radius: 1.1rem; overflow: hidden;
-      box-shadow: 0 16px 45px rgba(42,23,64,0.16);
     }
     th, td { text-align: left; padding: 0.75rem 0.85rem; border-bottom: 1px solid var(--border); font-size: 0.87rem; overflow-wrap: break-word; }
     th {
@@ -161,13 +164,21 @@
       border: 1px solid rgba(255,255,255,0.5); border-radius: 1.1rem;
       box-shadow: 0 16px 45px rgba(42,23,64,0.16); padding: 1.6rem 1.9rem; margin: 0.5rem 0 1rem;
     }
+    .filter-panel-header { padding-bottom: 1.1rem; margin-bottom: 1.1rem; border-bottom: 1px solid var(--border); }
+    .filter-panel-header h2 { margin: 0; font-size: 1.3rem; }
+    .filter-panel-header-sub { margin: 0.15rem 0 0; color: var(--text-muted); font-size: 0.88rem; }
+    .filter-section-label {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+      color: var(--text-muted); margin: 1.2rem 0 0.6rem;
+    }
+    .filter-section-label:first-of-type { margin-top: 0; }
     .filter-panel .filter-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; margin-bottom: 0; }
     .filter-panel .field { min-width: 100px; flex: 1; }
     .filter-panel input[type=number] { width: 100%; }
-    .filter-panel .pet-friendly-row { margin-top: 0.75rem; font-size: 0.9rem; color: var(--text); display: flex; gap: 1.25rem; flex-wrap: wrap; }
+    .filter-panel .pet-friendly-row { font-size: 0.9rem; color: var(--text); display: flex; gap: 1.25rem; flex-wrap: wrap; }
     .filter-panel details { margin-top: 0.6rem; }
     .filter-panel summary { cursor: pointer; font-size: 0.85rem; color: var(--blue); font-weight: 500; }
-    .filter-actions { display: flex; gap: 0.75rem; margin-top: 0.85rem; flex-wrap: wrap; align-items: center; }
+    .filter-actions { display: flex; gap: 0.75rem; margin-top: 1.2rem; padding-top: 1.1rem; border-top: 1px solid var(--border); flex-wrap: wrap; align-items: center; }
     .filter-status { margin: 0.6rem 0 0; }
     .dropdown-row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.1rem; }
     .dropdown-check { position: relative; }
@@ -232,7 +243,7 @@
     <div class="inner">
       <span class="brand">Huisjagers</span>
       {% if session %}
-        <a href="/">My Matches</a>
+        <a href="/">Hunter</a>
         <a href="/templates">Templates</a>
         <a href="/account">Account</a>
         <form method="post" action="/logout">
@@ -257,6 +268,12 @@
       const checked = details.querySelectorAll('input[type=checkbox]:checked').length;
       summarySpan.textContent = checked + ' ' + suffix;
     }
+
+    document.addEventListener('click', (e) => {
+      document.querySelectorAll('details.dropdown-check[open]').forEach((details) => {
+        if (!details.contains(e.target)) details.removeAttribute('open');
+      });
+    });
 
     function openDrawer(btn) {
       const row = btn.closest('tr');

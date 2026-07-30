@@ -1,11 +1,7 @@
 {% extends "base.html" %}
-{% block title %}My Matches - Huisjagers{% endblock %}
+{% block title %}Hunter - Huisjagers{% endblock %}
 {% block content %}
-<h1>My Matches</h1>
-<p class="subtitle">
-  {{ listings|length }} matching listings
-  {%- if selected_cities|length > 0 and selected_cities|length < cities|length %} in {{ selected_city_names|join(', ') }}{% endif -%}
-</p>
+<h1>Hunter</h1>
 
 {% if not session.ntfy_topic_url %}
   <p class="hint nag">🔔 You haven't set up notifications yet - you won't get pinged about new matches until you do. <a href="/account">Set up notifications →</a></p>
@@ -16,8 +12,15 @@
 {% endif %}
 
 <div class="filter-panel">
+  <div class="filter-panel-header">
+    <h2>{{ listings|length }} matching listing{{ '' if listings|length == 1 else 's' }}</h2>
+    {% if selected_cities|length > 0 and selected_cities|length < cities|length %}
+      <p class="filter-panel-header-sub">in {{ selected_city_names|join(', ') }}</p>
+    {% endif %}
+  </div>
   <form method="get" action="/">
     <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <p class="filter-section-label">Cities &amp; sources</p>
     <div class="dropdown-row">
       <details class="dropdown-check">
         <summary>Cities: <span>{{ selected_cities|length }} of {{ cities|length }}</span></summary>
@@ -41,6 +44,7 @@
       </details>
       <span class="hint">Cities controls what's shown and where "Save" applies. Hide sources stops seeing (and being notified about) a site entirely.</span>
     </div>
+    <p class="filter-section-label">Price &amp; size</p>
     <div class="filter-row">
       <div class="field">
         <label>Price min (€)</label>
@@ -67,6 +71,7 @@
         <input type="number" step="1" name="sqft_max" value="{{ filters.sqft_max|int if filters and filters.sqft_max is not none else '' }}" placeholder="{{ saved_summary.sqft_max|int if saved_summary and saved_summary.sqft_max is not none else '' }}">
       </div>
     </div>
+    <p class="filter-section-label">Preferences</p>
     <div class="pet-friendly-row">
       <label><input type="checkbox" name="pet_friendly_required" value="true" {% if filters and filters.pet_friendly_required %}checked{% endif %}> Pet-friendly required{% if saved_summary and saved_summary.pet_friendly_required %} <span class="hint">(saved: yes)</span>{% endif %}</label>
       <label><input type="checkbox" name="hide_house_swaps" value="true" {% if filters and filters.hide_house_swaps %}checked{% endif %}> Hide house swap listings{% if saved_summary and not saved_summary.hide_house_swaps %} <span class="hint">(saved: off)</span>{% endif %}</label>
@@ -118,6 +123,7 @@
   <p class="hint">No matching listings right now.</p>
 {% endif %}
 
+<div class="table-scroll">
 <table>
   <thead>
     <tr>
@@ -165,6 +171,7 @@
     {% endfor %}
   </tbody>
 </table>
+</div>
 
 <div id="listing-drawer-overlay" class="drawer-overlay" onclick="closeDrawer()"></div>
 <div id="listing-drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-address">
