@@ -7,6 +7,16 @@
   <p class="hint nag">🔔 You haven't set up notifications yet - you won't get pinged about new matches until you do. <a href="/account">Set up notifications →</a></p>
 {% endif %}
 
+{% if has_no_active_notifications %}
+<div id="welcome-modal-overlay" class="drawer-overlay" onclick="dismissWelcomeModal()"></div>
+<div id="welcome-modal" class="welcome-modal" role="dialog" aria-modal="true" aria-labelledby="welcome-modal-title">
+  <button type="button" class="drawer-close" onclick="dismissWelcomeModal()" aria-label="Close">&times;</button>
+  <h2 id="welcome-modal-title">👋 Welcome to Hunter</h2>
+  <p>You haven't set up notifications for any city yet - no rush, feel free to just browse for now. Whenever you're ready, pick your cities and filters in the card below and hit "Save as my notification filters" to start getting pinged about new matches.</p>
+  <button type="button" class="primary" onclick="dismissWelcomeModal()">Got it</button>
+</div>
+{% endif %}
+
 <div class="filter-panel">
   <div class="filter-panel-header">
     <h2>{{ listings|length }} matching listing{{ '' if listings|length == 1 else 's' }}</h2>
@@ -123,7 +133,7 @@
 <table>
   <colgroup>
     <col style="width: 20%"><col style="width: 9%"><col style="width: 8%">
-    <col style="width: 10%"><col style="width: 12%"><col style="width: 15%"><col style="width: 12%"><col style="width: 14%">
+    <col style="width: 10%"><col style="width: 15%"><col style="width: 12%"><col style="width: 12%"><col style="width: 14%">
   </colgroup>
   <thead>
     <tr>

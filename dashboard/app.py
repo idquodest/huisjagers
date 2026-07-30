@@ -570,6 +570,12 @@ def index(request: Request):
             saved_summary = db.preferences_row_to_dict(pref_rows[0]) if pref_rows else None
             filters_are_saved = filters == saved_summary
 
+        # Drives the gentle first-visit nudge modal - true only when the
+        # user has never saved notification filters for any city at all,
+        # not just this one (get_user_preferences without a city_key
+        # already filters to enabled=1 rows).
+        has_no_active_notifications = len(db.get_user_preferences(conn, session["user_id"])) == 0
+
     listings = []
     for row in matched_rows:
         listings.append({
@@ -609,5 +615,6 @@ def index(request: Request):
             "filters": filters,
             "filters_are_saved": filters_are_saved,
             "saved_summary": saved_summary,
+            "has_no_active_notifications": has_no_active_notifications,
         },
     )
