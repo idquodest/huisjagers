@@ -1,8 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Hunter - Huisjagers{% endblock %}
 {% block content %}
-<h1>Hunter</h1>
-
 {% if not session.ntfy_topic_url %}
   <p class="hint nag">🔔 You haven't set up notifications yet - you won't get pinged about new matches until you do. <a href="/account">Set up notifications →</a></p>
 {% endif %}
@@ -63,10 +61,6 @@
       <div class="field">
         <label>Bedrooms min</label>
         <input type="number" step="1" name="beds_min" value="{{ filters.beds_min|int if filters and filters.beds_min is not none else '' }}" placeholder="{{ saved_summary.beds_min|int if saved_summary and saved_summary.beds_min is not none else '' }}">
-      </div>
-      <div class="field">
-        <label>Bathrooms min</label>
-        <input type="number" step="1" name="baths_min" value="{{ filters.baths_min|int if filters and filters.baths_min is not none else '' }}" placeholder="{{ saved_summary.baths_min|int if saved_summary and saved_summary.baths_min is not none else '' }}">
       </div>
       <div class="field">
         <label>Size min (m²)</label>
