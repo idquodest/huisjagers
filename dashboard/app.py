@@ -135,6 +135,25 @@ def _prefs_from_getter(get, excluded_sources: list[str] | None = None, hide_hous
     }
 
 
+def _dedupe_cross_platform_listings(rows: list) -> list:
+    """Pararius and huurwoningen are the same underlying platform (same
+    landlord listings, two different frontends), so the same physical
+    apartment often gets scraped from both with different ids - keep one
+    row per (city, address, price), preferring the pararius copy when a
+    listing exists on both. Rows with no address are never merged (a
+    missing address makes the grouping key too weak to trust)."""
+    best: dict[tuple, object] = {}
+    order: list[tuple] = []
+    for row in rows:
+        key = (row["city_key"], row["address"], row["price"]) if row["address"] else ("__unique__", row["id"])
+        if key not in best:
+            order.append(key)
+            best[key] = row
+        elif row["source"] == "pararius" and best[key]["source"] != "pararius":
+            best[key] = row
+    return [best[key] for key in order]
+
+
 def _sort_listings(listings: list[dict], column: str, desc: bool) -> list[dict]:
     """Sorts by the given column, case-insensitively for text. Listings
     with no value for that column always sort to the end regardless of
@@ -559,6 +578,7 @@ def index(request: Request):
             for row in db.get_listings(conn, city_key=city_key):
                 if matches(db.row_to_listing(row), filters):
                     matched_rows.append(row)
+        matched_rows = _dedupe_cross_platform_listings(matched_rows)
 
         # A "saved vs. live" comparison only makes sense with exactly one
         # city in scope - with several (or zero) checked there's no single
