@@ -45,7 +45,7 @@
         <div class="dropdown-check-panel">
           {% for key, name in cities.items() %}
             <label class="dropdown-check-option">
-              <input type="checkbox" name="cities" value="{{ key }}" {% if key in selected_cities %}checked{% endif %} onchange="updateDropdownSummary(this, '{{ cities|length }} of')"> {{ name }}
+              <input type="checkbox" name="cities" value="{{ key }}" {% if key in selected_cities %}checked{% endif %} onchange="updateDropdownSummary(this, 'of {{ cities|length }}')"> {{ name }}
             </label>
           {% endfor %}
         </div>
