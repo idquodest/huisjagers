@@ -587,6 +587,36 @@ def apply_auto(request: Request, listing_id: str, template_id: int | None = None
     return Response(json.dumps(body), media_type="application/json", headers=_no_store_headers())
 
 
+# Plain-text twins of /apply/{listing_id}/auto's two JSON fields, for
+# automation apps whose HTTP action can save a raw response body to a
+# variable but has no JSON-field extraction step - two requests instead of
+# one plus a parse, trading a request for not depending on that feature
+# existing at all.
+@app.get("/apply/{listing_id}/auto/url")
+def apply_auto_url(request: Request, listing_id: str, template_id: int | None = None):
+    config = load_config(CONFIG_PATH)
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        status, payload = _build_apply_payload(conn, config, session, listing_id, template_id)
+
+    if status == "error":
+        return Response(payload, media_type="text/plain", status_code=400, headers=_no_store_headers())
+    return Response(payload["listing"]["url"], media_type="text/plain", headers=_no_store_headers())
+
+
+@app.get("/apply/{listing_id}/auto/script")
+def apply_auto_script_text(request: Request, listing_id: str, template_id: int | None = None):
+    config = load_config(CONFIG_PATH)
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        status, payload = _build_apply_payload(conn, config, session, listing_id, template_id)
+
+    if status == "error":
+        return Response(payload, media_type="text/plain", status_code=400, headers=_no_store_headers())
+    script = _build_fill_script(payload["rendered"], payload["injector"])
+    return Response(script, media_type="text/plain", headers=_no_store_headers())
+
+
 # --- save notification filters (used by the 20-min notifier, not by browsing) --
 
 @app.post("/notification-filters")
