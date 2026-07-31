@@ -62,12 +62,16 @@ def send_notification(ntfy_topic_url: str, listing: Listing, city_name: str) -> 
     # an automation app (e.g. MacroDroid) can catch it via an "Intent
     # Received" trigger and read the extra directly - no notification-text
     # parsing/regex required on the automation side.
+    #
+    # Deliberately NOT overriding "intent" with a custom action name here -
+    # ntfy's own documented default ("io.heckel.ntfy.USER_ACTION") is what
+    # its Android app is known to actually send; a custom override wasn't
+    # reliably honored in testing.
     if auto_apply_url:
         payload["actions"] = [
             {
                 "action": "broadcast",
                 "label": "Auto-apply",
-                "intent": "nl.huisjagers.AUTO_APPLY",
                 "extras": {"auto_apply_url": auto_apply_url},
                 "clear": False,
             }
