@@ -523,7 +523,10 @@ def apply_inject_script(request: Request, listing_id: str, template_id: int | No
 
         user_templates = db.get_application_templates(conn, session["user_id"])
         if not user_templates:
-            return Response("console.error('Huisjagers: no application template saved yet - add one at /templates.');", media_type="application/javascript")
+            return Response(
+                f"console.error('DEBUG session_user_id={session['user_id']!r} listing_id={listing_id!r} listing_source={listing['source']!r}');",
+                media_type="application/javascript",
+            )
 
         selected_template = next((t for t in user_templates if t["id"] == template_id), user_templates[0])
         city_name = config["cities"].get(listing["city_key"], {}).get("name", listing["city_key"])
