@@ -16,6 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import auth  # noqa: E402
 import db  # noqa: E402
 import oauth  # noqa: E402
+from apply_injectors import SOURCE_APPLY_INJECTORS  # noqa: E402
 from matcher import matches  # noqa: E402
 from run import load_config  # noqa: E402
 
@@ -74,23 +75,6 @@ def _set_session_cookie(response, token: str) -> None:
 # --- application templates: {placeholder} substitution --------------------------
 
 _TEMPLATE_VAR_NAMES = ["address", "city", "price", "sqft", "rooms", "bathrooms", "source", "url", "amenities"]
-
-# Per-source field targeting for the mobile auto-fill injection script (see
-# /apply/{listing_id}/inject.js). Each source's own contact/apply form has a
-# different field name and a different way to reach it from the listing
-# page - keyed by source name so a new source is just a new entry here, not
-# a code change. Selectors were found by hand (view-source on a real,
-# logged-in contact form), not guessed - a source with no entry here simply
-# isn't supported yet.
-_SOURCE_APPLY_INJECTORS = {
-    "pararius": {
-        # Pararius's own name for the "why do you want this place" field on
-        # its /contact/{id} page, reached by clicking "Contact the estate
-        # agent"/"Contact the provider" from the listing page itself.
-        "motivation_selector": 'textarea[name="contact_agent_huurprofiel_form[motivation]"]',
-        "contact_button_text": ["contact the estate agent", "contact the provider"],
-    },
-}
 
 
 def _listing_template_vars(row: dict, city_name: str) -> dict:
@@ -507,7 +491,7 @@ def _build_apply_payload(conn, config: dict, session, listing_id: str, template_
     if listing is None:
         return "error", "Listing not found."
 
-    injector = _SOURCE_APPLY_INJECTORS.get(listing["source"])
+    injector = SOURCE_APPLY_INJECTORS.get(listing["source"])
     if injector is None:
         return "error", f"Auto-fill isn't set up for {listing['source']} yet."
 
@@ -754,7 +738,7 @@ def index(request: Request):
         {
             "session": session, "listings": listings, "cities": cities,
             "selected_cities": selected_cities, "selected_city_names": selected_city_names,
-            "all_sources": all_sources, "auto_apply_sources": set(_SOURCE_APPLY_INJECTORS.keys()),
+            "all_sources": all_sources, "auto_apply_sources": set(SOURCE_APPLY_INJECTORS.keys()),
             "sort_column": sort_column, "sort_desc": sort_desc, "sort_links": sort_links,
             "filters": filters,
             "filters_are_saved": filters_are_saved,

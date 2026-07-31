@@ -1,11 +1,18 @@
 import logging
+import os
 from urllib.parse import urlsplit
 
 import requests
 
+from apply_injectors import SOURCE_APPLY_INJECTORS
 from models import Listing
 
 logger = logging.getLogger(__name__)
+
+# Same default/override pattern as dashboard/app.py's PUBLIC_BASE_URL -
+# needed here too since the ntfy "Auto-apply" action button links back to
+# our own /apply/{id}/auto endpoint, not just the source site.
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://huisjagers.solvire.nl")
 
 
 def send_notification(ntfy_topic_url: str, listing: Listing, city_name: str) -> bool:
@@ -31,16 +38,31 @@ def send_notification(ntfy_topic_url: str, listing: Listing, city_name: str) -> 
     server_url = f"{split.scheme}://{split.netloc}"
     topic = split.path.strip("/")
 
+    payload = {
+        "topic": topic,
+        "title": title,
+        "message": body,
+        "click": listing.url,
+        "priority": 3,
+    }
+
+    # Only sources with a configured form injector can actually be
+    # auto-filled - see apply_injectors.py. Leaves "click" (default tap
+    # behavior, opens the listing itself) untouched for every listing.
+    if listing.source in SOURCE_APPLY_INJECTORS:
+        payload["actions"] = [
+            {
+                "action": "view",
+                "label": "Auto-apply",
+                "url": f"{PUBLIC_BASE_URL}/apply/{listing.id}/auto",
+                "clear": False,
+            }
+        ]
+
     try:
         resp = requests.post(
             server_url,
-            json={
-                "topic": topic,
-                "title": title,
-                "message": body,
-                "click": listing.url,
-                "priority": 3,
-            },
+            json=payload,
             timeout=10,
         )
         resp.raise_for_status()
