@@ -139,13 +139,13 @@
     input:focus, textarea:focus, select:focus { outline: none; border-color: var(--violet); box-shadow: 0 0 0 3px rgba(139,92,246,0.25); }
     textarea { min-height: 4rem; resize: vertical; }
     input::placeholder, textarea::placeholder { color: #a89fbb; opacity: 1; }
-    button.primary, input[type=submit] {
+    button.primary, input[type=submit], a.primary {
       background: var(--violet); color: #fff; border: 1px solid var(--violet); border-radius: 0.5rem;
-      padding: 0.55rem 1.2rem; font: inherit; font-weight: 600; cursor: pointer;
+      padding: 0.55rem 1.2rem; font: inherit; font-weight: 600; cursor: pointer; display: inline-block;
       transition: background 0.15s, box-shadow 0.15s;
     }
-    button.primary:hover, input[type=submit]:hover { background: #713fb0; box-shadow: 0 0 0 4px rgba(99,56,158,0.2); }
-    button.primary:active, input[type=submit]:active { background: #542f87; }
+    button.primary:hover, input[type=submit]:hover, a.primary:hover { background: #713fb0; box-shadow: 0 0 0 4px rgba(99,56,158,0.2); }
+    button.primary:active, input[type=submit]:active, a.primary:active { background: #542f87; }
     button.secondary, a.secondary {
       background: rgba(91,58,152,0.05); color: var(--text); border: 1px solid var(--border-strong); border-radius: 0.5rem;
       padding: 0.45rem 0.85rem; font: inherit; font-weight: 500; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
@@ -324,6 +324,14 @@
 
       document.getElementById('drawer-view').href = row.dataset.viewUrl || '#';
       document.getElementById('drawer-apply').href = row.dataset.applyUrl || '#';
+
+      var autoApply = document.getElementById('drawer-auto-apply');
+      if (row.dataset.autoApplyUrl) {
+        autoApply.href = row.dataset.autoApplyUrl;
+        autoApply.style.display = '';
+      } else {
+        autoApply.style.display = 'none';
+      }
 
       drawer.classList.add('open');
       overlay.classList.add('open');

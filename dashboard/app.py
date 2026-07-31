@@ -496,53 +496,35 @@ def apply_view(request: Request, listing_id: str, template_id: int | None = None
     )
 
 
-# Meant to be fetched by an on-device automation tool (e.g. an Android
-# MacroDroid macro triggered from tapping a match notification) and
-# injected into whatever page the browser/WebView is currently on - not
-# loaded by the dashboard itself. Requires the same session cookie as the
-# rest of the site, so the automation's browser needs to already be logged
-# into Huisjagers (normal persistent-login browsing covers this).
-def _js_response(body: str) -> Response:
-    # This endpoint's content is per-user (it embeds someone's own saved
-    # application template) - Cloudflare caches by file extension by
-    # default, and ".js" is one of the extensions it caches even though
-    # this response is fully dynamic. Without an explicit no-store here,
-    # the first person to hit a given listing's script gets their response
-    # cached and served to *everyone* who requests that same listing next -
-    # a real cross-user data leak, not just a staleness bug.
-    return Response(
-        body, media_type="application/javascript",
-        headers={"Cache-Control": "no-store, private", "Pragma": "no-cache"},
-    )
+# Shared by both the old inject.js endpoint (manual bookmarklet testing)
+# and /apply/{id}/auto (the real MacroDroid-facing endpoint). Returns
+# either ("error", message) or ("ok", {listing, injector, rendered}).
+def _build_apply_payload(conn, config: dict, session, listing_id: str, template_id: int | None):
+    if session is None:
+        return "error", "Not logged in - open huisjagers.solvire.nl and sign in first."
+
+    listing = db.get_listing_by_id(conn, listing_id)
+    if listing is None:
+        return "error", "Listing not found."
+
+    injector = _SOURCE_APPLY_INJECTORS.get(listing["source"])
+    if injector is None:
+        return "error", f"Auto-fill isn't set up for {listing['source']} yet."
+
+    user_templates = db.get_application_templates(conn, session["user_id"])
+    if not user_templates:
+        return "error", "No application template saved yet - add one at /templates."
+
+    selected_template = next((t for t in user_templates if t["id"] == template_id), user_templates[0])
+    city_name = config["cities"].get(listing["city_key"], {}).get("name", listing["city_key"])
+    rendered = _render_template(selected_template["body"], _listing_template_vars(listing, city_name))
+    return "ok", {"listing": listing, "injector": injector, "rendered": rendered}
 
 
-@app.get("/apply/{listing_id}/inject.js")
-def apply_inject_script(request: Request, listing_id: str, template_id: int | None = None):
-    config = load_config(CONFIG_PATH)
-    with db.connect(_db_path()) as conn:
-        session = auth.get_current_user(request, conn)
-        if session is None:
-            return _js_response("console.error('Huisjagers: not logged in - open huisjagers.solvire.nl and sign in first.');")
-
-        listing = db.get_listing_by_id(conn, listing_id)
-        if listing is None:
-            return _js_response("console.error('Huisjagers: listing not found.');")
-
-        injector = _SOURCE_APPLY_INJECTORS.get(listing["source"])
-        if injector is None:
-            return _js_response(f"console.error('Huisjagers: auto-fill isn\\'t set up for {listing['source']} yet.');")
-
-        user_templates = db.get_application_templates(conn, session["user_id"])
-        if not user_templates:
-            return _js_response("console.error('Huisjagers: no application template saved yet - add one at /templates.');")
-
-        selected_template = next((t for t in user_templates if t["id"] == template_id), user_templates[0])
-        city_name = config["cities"].get(listing["city_key"], {}).get("name", listing["city_key"])
-        rendered = _render_template(selected_template["body"], _listing_template_vars(listing, city_name))
-
-    script = f"""
+def _build_fill_script(message: str, injector: dict) -> str:
+    return f"""
 (function() {{
-  var MESSAGE = {json.dumps(rendered)};
+  var MESSAGE = {json.dumps(message)};
   var MOTIVATION_SELECTOR = {json.dumps(injector["motivation_selector"])};
   var CONTACT_BUTTON_TEXT = {json.dumps(injector["contact_button_text"])};
 
@@ -567,7 +549,58 @@ def apply_inject_script(request: Request, listing_id: str, template_id: int | No
   }}
 }})();
 """
-    return _js_response(script)
+
+
+# Both endpoints below are per-user, dynamic content (someone's own saved
+# application template) fetched by an on-device automation tool rather
+# than browsed - Cloudflare caches by file extension/URL by default
+# regardless of content, and without an explicit no-store the first
+# person to hit a given listing's URL would get their response cached and
+# served to *everyone* requesting that same listing next - a real
+# cross-user data leak, not just staleness. Every response here sets it.
+def _no_store_headers() -> dict:
+    return {"Cache-Control": "no-store, private", "Pragma": "no-cache"}
+
+
+@app.get("/apply/{listing_id}/inject.js")
+def apply_inject_script(request: Request, listing_id: str, template_id: int | None = None):
+    config = load_config(CONFIG_PATH)
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        status, payload = _build_apply_payload(conn, config, session, listing_id, template_id)
+
+    if status == "error":
+        body = f"console.error({json.dumps('Huisjagers: ' + payload)});"
+    else:
+        body = _build_fill_script(payload["rendered"], payload["injector"])
+    return Response(body, media_type="application/javascript", headers=_no_store_headers())
+
+
+# The real MacroDroid-facing endpoint: a single fetch gives the automation
+# everything it needs (the actual listing URL to open, plus the fill
+# script to inject once that page loads) instead of it having to know our
+# per-source selector logic itself. Plain JSON rather than another .js URL
+# specifically to steer clear of Cloudflare's extension-based caching
+# rules a second time.
+@app.get("/apply/{listing_id}/auto")
+def apply_auto(request: Request, listing_id: str, template_id: int | None = None):
+    config = load_config(CONFIG_PATH)
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        status, payload = _build_apply_payload(conn, config, session, listing_id, template_id)
+
+    if status == "error":
+        return Response(
+            json.dumps({"ok": False, "error": payload}),
+            media_type="application/json", status_code=400, headers=_no_store_headers(),
+        )
+
+    body = {
+        "ok": True,
+        "listing_url": payload["listing"]["url"],
+        "script": _build_fill_script(payload["rendered"], payload["injector"]),
+    }
+    return Response(json.dumps(body), media_type="application/json", headers=_no_store_headers())
 
 
 # --- save notification filters (used by the 20-min notifier, not by browsing) --
@@ -721,7 +754,7 @@ def index(request: Request):
         {
             "session": session, "listings": listings, "cities": cities,
             "selected_cities": selected_cities, "selected_city_names": selected_city_names,
-            "all_sources": all_sources,
+            "all_sources": all_sources, "auto_apply_sources": set(_SOURCE_APPLY_INJECTORS.keys()),
             "sort_column": sort_column, "sort_desc": sort_desc, "sort_links": sort_links,
             "filters": filters,
             "filters_are_saved": filters_are_saved,

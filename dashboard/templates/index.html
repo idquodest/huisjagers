@@ -168,6 +168,7 @@
       data-map-embed-url="{% if l.address %}https://www.google.com/maps?q={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}&z=13&output=embed{% endif %}"
       data-view-url="{{ l.url }}"
       data-apply-url="/apply/{{ l.id }}"
+      data-auto-apply-url="{% if l.source in auto_apply_sources %}/apply/{{ l.id }}/auto{% endif %}"
     >
       <td data-label="Address">
         <a class="address-link" href="{{ l.url }}" target="_blank" rel="noopener noreferrer">{{ l.address }}</a>
@@ -207,6 +208,7 @@
   <div class="drawer-actions">
     <a id="drawer-view" class="listing-link" target="_blank" rel="noopener noreferrer">View original listing →</a>
     <a id="drawer-apply" class="listing-link">Apply →</a>
+    <a id="drawer-auto-apply" class="primary" target="_blank" rel="noopener noreferrer" style="display:none; text-align:center; text-decoration:none;">⚡ Auto-apply</a>
   </div>
 </div>
 {% endblock %}
