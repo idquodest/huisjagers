@@ -30,6 +30,15 @@ def send_notification(ntfy_topic_url: str, listing: Listing, city_name: str) -> 
         f"Amenities: {amenities_str}\nSource: {listing.source}"
     )
 
+    auto_apply_url = None
+    if listing.source in SOURCE_APPLY_INJECTORS:
+        auto_apply_url = f"{PUBLIC_BASE_URL}/apply/{listing.id}/auto"
+        # Also put the URL in the plain message text, not just the action
+        # button below - MacroDroid can regex this straight out of the
+        # notification text, which is far more reliable than trying to
+        # intercept the action button's own tap/intent.
+        body += f"\nAuto-apply: {auto_apply_url}"
+
     # HTTP headers are latin-1 only, so non-ASCII characters (€, m², etc.)
     # in the title crash a header-based publish. ntfy's JSON publish API
     # (POST to the server root, not the topic URL) sends everything in the
@@ -49,12 +58,12 @@ def send_notification(ntfy_topic_url: str, listing: Listing, city_name: str) -> 
     # Only sources with a configured form injector can actually be
     # auto-filled - see apply_injectors.py. Leaves "click" (default tap
     # behavior, opens the listing itself) untouched for every listing.
-    if listing.source in SOURCE_APPLY_INJECTORS:
+    if auto_apply_url:
         payload["actions"] = [
             {
                 "action": "view",
                 "label": "Auto-apply",
-                "url": f"{PUBLIC_BASE_URL}/apply/{listing.id}/auto",
+                "url": auto_apply_url,
                 "clear": False,
             }
         ]
