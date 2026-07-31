@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -74,6 +74,23 @@ def _set_session_cookie(response, token: str) -> None:
 # --- application templates: {placeholder} substitution --------------------------
 
 _TEMPLATE_VAR_NAMES = ["address", "city", "price", "sqft", "rooms", "bathrooms", "source", "url", "amenities"]
+
+# Per-source field targeting for the mobile auto-fill injection script (see
+# /apply/{listing_id}/inject.js). Each source's own contact/apply form has a
+# different field name and a different way to reach it from the listing
+# page - keyed by source name so a new source is just a new entry here, not
+# a code change. Selectors were found by hand (view-source on a real,
+# logged-in contact form), not guessed - a source with no entry here simply
+# isn't supported yet.
+_SOURCE_APPLY_INJECTORS = {
+    "pararius": {
+        # Pararius's own name for the "why do you want this place" field on
+        # its /contact/{id} page, reached by clicking "Contact the estate
+        # agent"/"Contact the provider" from the listing page itself.
+        "motivation_selector": 'textarea[name="contact_agent_huurprofiel_form[motivation]"]',
+        "contact_button_text": ["contact the estate agent", "contact the provider"],
+    },
+}
 
 
 def _listing_template_vars(row: dict, city_name: str) -> dict:
@@ -477,6 +494,69 @@ def apply_view(request: Request, listing_id: str, template_id: int | None = None
             "selected_template": selected_template, "rendered": rendered,
         },
     )
+
+
+# Meant to be fetched by an on-device automation tool (e.g. an Android
+# MacroDroid macro triggered from tapping a match notification) and
+# injected into whatever page the browser/WebView is currently on - not
+# loaded by the dashboard itself. Requires the same session cookie as the
+# rest of the site, so the automation's browser needs to already be logged
+# into Huisjagers (normal persistent-login browsing covers this).
+@app.get("/apply/{listing_id}/inject.js")
+def apply_inject_script(request: Request, listing_id: str, template_id: int | None = None):
+    config = load_config(CONFIG_PATH)
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        if session is None:
+            return Response("console.error('Huisjagers: not logged in - open huisjagers.solvire.nl and sign in first.');", media_type="application/javascript")
+
+        listing = db.get_listing_by_id(conn, listing_id)
+        if listing is None:
+            return Response("console.error('Huisjagers: listing not found.');", media_type="application/javascript")
+
+        injector = _SOURCE_APPLY_INJECTORS.get(listing["source"])
+        if injector is None:
+            return Response(
+                f"console.error('Huisjagers: auto-fill isn\\'t set up for {listing['source']} yet.');",
+                media_type="application/javascript",
+            )
+
+        user_templates = db.get_application_templates(conn, session["user_id"])
+        if not user_templates:
+            return Response("console.error('Huisjagers: no application template saved yet - add one at /templates.');", media_type="application/javascript")
+
+        selected_template = next((t for t in user_templates if t["id"] == template_id), user_templates[0])
+        city_name = config["cities"].get(listing["city_key"], {}).get("name", listing["city_key"])
+        rendered = _render_template(selected_template["body"], _listing_template_vars(listing, city_name))
+
+    script = f"""
+(function() {{
+  var MESSAGE = {json.dumps(rendered)};
+  var MOTIVATION_SELECTOR = {json.dumps(injector["motivation_selector"])};
+  var CONTACT_BUTTON_TEXT = {json.dumps(injector["contact_button_text"])};
+
+  var field = document.querySelector(MOTIVATION_SELECTOR);
+  if (field) {{
+    field.value = MESSAGE;
+    field.dispatchEvent(new Event('input', {{ bubbles: true }}));
+    field.dispatchEvent(new Event('change', {{ bubbles: true }}));
+    console.log('Huisjagers: message field filled.');
+    return;
+  }}
+
+  var clickable = Array.prototype.slice.call(document.querySelectorAll('a, button')).find(function (el) {{
+    var text = (el.textContent || '').trim().toLowerCase();
+    return CONTACT_BUTTON_TEXT.some(function (needle) {{ return text.indexOf(needle) !== -1; }});
+  }});
+  if (clickable) {{
+    console.log('Huisjagers: clicking through to the contact form - re-run this script once that page loads.');
+    clickable.click();
+  }} else {{
+    console.log('Huisjagers: could not find the message field or a contact button on this page.');
+  }}
+}})();
+"""
+    return Response(script, media_type="application/javascript")
 
 
 # --- save notification filters (used by the 20-min notifier, not by browsing) --
