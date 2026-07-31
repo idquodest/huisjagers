@@ -33,10 +33,8 @@ def send_notification(ntfy_topic_url: str, listing: Listing, city_name: str) -> 
     auto_apply_url = None
     if listing.source in SOURCE_APPLY_INJECTORS:
         auto_apply_url = f"{PUBLIC_BASE_URL}/apply/{listing.id}/auto"
-        # Also put the URL in the plain message text, not just the action
-        # button below - MacroDroid can regex this straight out of the
-        # notification text, which is far more reliable than trying to
-        # intercept the action button's own tap/intent.
+        # Keep the URL visible in the plain message text too, as a fallback
+        # for manual copy-paste when no automation is set up.
         body += f"\nAuto-apply: {auto_apply_url}"
 
     # HTTP headers are latin-1 only, so non-ASCII characters (€, m², etc.)
@@ -58,12 +56,19 @@ def send_notification(ntfy_topic_url: str, listing: Listing, city_name: str) -> 
     # Only sources with a configured form injector can actually be
     # auto-filled - see apply_injectors.py. Leaves "click" (default tap
     # behavior, opens the listing itself) untouched for every listing.
+    #
+    # "broadcast" (not "view") deliberately - it fires an Android intent
+    # with the URL as a structured extra instead of opening a browser, so
+    # an automation app (e.g. MacroDroid) can catch it via an "Intent
+    # Received" trigger and read the extra directly - no notification-text
+    # parsing/regex required on the automation side.
     if auto_apply_url:
         payload["actions"] = [
             {
-                "action": "view",
+                "action": "broadcast",
                 "label": "Auto-apply",
-                "url": auto_apply_url,
+                "intent": "nl.huisjagers.AUTO_APPLY",
+                "extras": {"auto_apply_url": auto_apply_url},
                 "clear": False,
             }
         ]
