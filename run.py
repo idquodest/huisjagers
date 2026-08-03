@@ -87,7 +87,8 @@ def match_phase(config: dict, conn, now_iso: str) -> tuple[int, int]:
                     matched_count += 1
                     first_seen = datetime.fromisoformat(row["first_seen"])
                     if first_seen >= user_created_at and user["ntfy_topic_url"]:
-                        notified = send_notification(user["ntfy_topic_url"], listing, city_name)
+                        automation_token = user["automation_token"] or db.ensure_automation_token(conn, user["id"])
+                        notified = send_notification(user["ntfy_topic_url"], listing, city_name, automation_token)
                         if notified:
                             notified_count += 1
 

@@ -546,6 +546,19 @@ def _no_store_headers() -> dict:
     return {"Cache-Control": "no-store, private", "Pragma": "no-cache"}
 
 
+# A non-browser HTTP client (e.g. a phone automation app's HTTP Request
+# action) can't send the session cookie a logged-in browser would - the
+# token is a stand-in identity for that case, embedded directly in the
+# auto-apply URL by notifier.py rather than something the user configures
+# by hand. Browser-based routes (the drawer's own Auto-apply button, the
+# bookmarklet) keep using the cookie, unaffected.
+def _resolve_session(request: Request, conn, token: str | None):
+    if token:
+        user_row = db.get_user_by_automation_token(conn, token)
+        return {"user_id": user_row["id"]} if user_row else None
+    return auth.get_current_user(request, conn)
+
+
 @app.get("/apply/{listing_id}/inject.js")
 def apply_inject_script(request: Request, listing_id: str, template_id: int | None = None):
     config = load_config(CONFIG_PATH)
@@ -567,10 +580,11 @@ def apply_inject_script(request: Request, listing_id: str, template_id: int | No
 # specifically to steer clear of Cloudflare's extension-based caching
 # rules a second time.
 @app.get("/apply/{listing_id}/auto")
-def apply_auto(request: Request, listing_id: str, template_id: int | None = None):
+@app.get("/apply/{listing_id}/auto/t/{token}")
+def apply_auto(request: Request, listing_id: str, token: str | None = None, template_id: int | None = None):
     config = load_config(CONFIG_PATH)
     with db.connect(_db_path()) as conn:
-        session = auth.get_current_user(request, conn)
+        session = _resolve_session(request, conn, token)
         status, payload = _build_apply_payload(conn, config, session, listing_id, template_id)
 
     if status == "error":
@@ -593,10 +607,11 @@ def apply_auto(request: Request, listing_id: str, template_id: int | None = None
 # one plus a parse, trading a request for not depending on that feature
 # existing at all.
 @app.get("/apply/{listing_id}/auto/url")
-def apply_auto_url(request: Request, listing_id: str, template_id: int | None = None):
+@app.get("/apply/{listing_id}/auto/t/{token}/url")
+def apply_auto_url(request: Request, listing_id: str, token: str | None = None, template_id: int | None = None):
     config = load_config(CONFIG_PATH)
     with db.connect(_db_path()) as conn:
-        session = auth.get_current_user(request, conn)
+        session = _resolve_session(request, conn, token)
         status, payload = _build_apply_payload(conn, config, session, listing_id, template_id)
 
     if status == "error":
@@ -605,10 +620,13 @@ def apply_auto_url(request: Request, listing_id: str, template_id: int | None = 
 
 
 @app.get("/apply/{listing_id}/auto/script")
-def apply_auto_script_text(request: Request, listing_id: str, template_id: int | None = None):
+@app.get("/apply/{listing_id}/auto/t/{token}/script")
+def apply_auto_script_text(
+    request: Request, listing_id: str, token: str | None = None, template_id: int | None = None,
+):
     config = load_config(CONFIG_PATH)
     with db.connect(_db_path()) as conn:
-        session = auth.get_current_user(request, conn)
+        session = _resolve_session(request, conn, token)
         status, payload = _build_apply_payload(conn, config, session, listing_id, template_id)
 
     if status == "error":

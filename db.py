@@ -119,6 +119,7 @@ def init_db(db_path: str) -> None:
         _ensure_column(conn, "user_city_preferences", "excluded_sources", "TEXT")
         _ensure_column(conn, "users", "oauth_provider", "TEXT")
         _ensure_column(conn, "users", "oauth_id", "TEXT")
+        _ensure_column(conn, "users", "automation_token", "TEXT")
         # Partial index (only rows that actually have an oauth link) so two
         # users can't end up linked to the same provider account, without
         # constraining the many password-only rows where both are NULL.
@@ -272,6 +273,23 @@ def get_active_users(conn: sqlite3.Connection) -> list[sqlite3.Row]:
 
 def update_user_ntfy_topic(conn: sqlite3.Connection, user_id: int, ntfy_topic_url: str | None) -> None:
     conn.execute("UPDATE users SET ntfy_topic_url = ? WHERE id = ?", (ntfy_topic_url, user_id))
+
+
+def get_user_by_automation_token(conn: sqlite3.Connection, token: str) -> sqlite3.Row | None:
+    return conn.execute("SELECT * FROM users WHERE automation_token = ?", (token,)).fetchone()
+
+
+def ensure_automation_token(conn: sqlite3.Connection, user_id: int) -> str:
+    """Non-browser clients (e.g. a phone automation app) can't send the
+    session cookie a logged-in browser would - this token is a stand-in
+    identity for that, embedded directly in the auto-apply URL rather than
+    something the user has to configure by hand."""
+    row = conn.execute("SELECT automation_token FROM users WHERE id = ?", (user_id,)).fetchone()
+    if row and row["automation_token"]:
+        return row["automation_token"]
+    token = secrets.token_urlsafe(24)
+    conn.execute("UPDATE users SET automation_token = ? WHERE id = ?", (token, user_id))
+    return token
 
 
 def create_session(

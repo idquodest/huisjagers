@@ -22,7 +22,9 @@ PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://huisjagers.solvire.
 MACRODROID_WEBHOOK_URL = os.environ.get("MACRODROID_WEBHOOK_URL", "")
 
 
-def send_notification(ntfy_topic_url: str, listing: Listing, city_name: str) -> bool:
+def send_notification(
+    ntfy_topic_url: str, listing: Listing, city_name: str, automation_token: str | None = None,
+) -> bool:
     """POST a match to ntfy.sh. Returns True on success (2xx response)."""
     price_str = f"€{listing.price:,.0f}" if listing.price is not None else "price n/a"
     beds_str = f"{listing.beds:g} Rooms" if listing.beds is not None else "Rooms n/a"
@@ -39,7 +41,14 @@ def send_notification(ntfy_topic_url: str, listing: Listing, city_name: str) -> 
 
     auto_apply_url = None
     if listing.source in SOURCE_APPLY_INJECTORS:
-        auto_apply_url = f"{PUBLIC_BASE_URL}/apply/{listing.id}/auto"
+        # The token (not a session cookie) is what lets a non-browser HTTP
+        # client - MacroDroid's HTTP Request action, not a logged-in
+        # browser - authenticate against these endpoints at all. Embedded
+        # as a path segment, not a query param, so simple string
+        # concatenation (MacroDroid building "{auto_apply_url}/url") still
+        # produces a valid URL instead of corrupting a query string.
+        suffix = f"/t/{automation_token}" if automation_token else ""
+        auto_apply_url = f"{PUBLIC_BASE_URL}/apply/{listing.id}/auto{suffix}"
         # Keep the URL visible in the plain message text too, as a fallback
         # for manual copy-paste when no automation is set up.
         body += f"\nAuto-apply: {auto_apply_url}"
