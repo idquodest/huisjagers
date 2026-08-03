@@ -1,6 +1,6 @@
 import logging
 import os
-from urllib.parse import urlsplit
+from urllib.parse import urlencode, urlsplit
 
 import requests
 
@@ -13,6 +13,13 @@ logger = logging.getLogger(__name__)
 # needed here too since the ntfy "Auto-apply" action button links back to
 # our own /apply/{id}/auto endpoint, not just the source site.
 PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://huisjagers.solvire.nl")
+
+# A personal MacroDroid webhook URL (trigger.macrodroid.com/<user>/<id>),
+# not something every Huisjagers user has - unset by default, so the
+# "Auto-apply" action is only added when this one deployment's owner has
+# configured their own mobile automation. Not a generic per-user feature
+# yet; deliberately kept out of the repo since it's account-specific.
+MACRODROID_WEBHOOK_URL = os.environ.get("MACRODROID_WEBHOOK_URL", "")
 
 
 def send_notification(ntfy_topic_url: str, listing: Listing, city_name: str) -> bool:
@@ -57,22 +64,24 @@ def send_notification(ntfy_topic_url: str, listing: Listing, city_name: str) -> 
     # auto-filled - see apply_injectors.py. Leaves "click" (default tap
     # behavior, opens the listing itself) untouched for every listing.
     #
-    # "broadcast" (not "view") deliberately - it fires an Android intent
-    # with the URL as a structured extra instead of opening a browser, so
-    # an automation app (e.g. MacroDroid) can catch it via an "Intent
-    # Received" trigger and read the extra directly - no notification-text
-    # parsing/regex required on the automation side.
-    #
-    # Deliberately NOT overriding "intent" with a custom action name here -
-    # ntfy's own documented default ("io.heckel.ntfy.USER_ACTION") is what
-    # its Android app is known to actually send; a custom override wasn't
-    # reliably honored in testing.
-    if auto_apply_url:
+    # "http" (not "broadcast") deliberately - ntfy's "broadcast" action
+    # (an Android intent with the URL as a structured extra, caught via a
+    # MacroDroid "Intent Received" trigger) never once reached MacroDroid
+    # in testing, with both a custom and ntfy's documented default intent
+    # name - likely not actually implemented by the installed ntfy app, or
+    # blocked by Android's inter-app broadcast restrictions. "http" fires a
+    # plain network request straight from the phone instead, no Android
+    # intent system involved, hitting MacroDroid's own cloud Webhook
+    # trigger (which relays it down to the device to fire the macro) -
+    # sidesteps whatever was blocking the broadcast entirely.
+    if auto_apply_url and MACRODROID_WEBHOOK_URL:
+        webhook_url = f"{MACRODROID_WEBHOOK_URL}?{urlencode({'auto_apply_url': auto_apply_url})}"
         payload["actions"] = [
             {
-                "action": "broadcast",
+                "action": "http",
                 "label": "Auto-apply",
-                "extras": {"auto_apply_url": auto_apply_url},
+                "url": webhook_url,
+                "method": "GET",
                 "clear": False,
             }
         ]
