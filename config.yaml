@@ -6,6 +6,11 @@
 
 polling:
   interval_minutes: 20
+  # Pause between source fetches within a run (skipped when a source's page
+  # was already downloaded earlier in the same run - see generic_css.py's
+  # page cache). Back-to-back requests across 10 cities got ikwilhuren and
+  # bpdwoningfonds returning 403 and pararius/huurwoningen failing ~25-30%.
+  delay_between_requests_seconds: 8
 
 database:
   path: "huisjagers.db"
@@ -388,6 +393,151 @@ cities:
         url: "https://hurenbij.bpdwoningfonds.nl/aanbod/"
         decimal_comma: true
         city_filter: ["hilversum"]
+        selectors:
+          listing: "div.card.card-result-list"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: "h5.card-title a"
+          city: ".card-text"
+          price: ".object-price .value"
+          beds: ".object-rooms .value"
+          sqft: ".object-area .value"
+          link: "h5.card-title a"
+          description: 'div.card-header:-soup-contains("Omschrijving") + div.card-body'
+
+  # Naarden and Bussum (next to Hilversum) are their own cities so each user
+  # opts in. Checked in a browser 2026-10-19: pararius/huurwoningen treat
+  # them as separate towns with their own URLs (a Hilversum search contains
+  # none of their listings); ikwilhuren's nationwide feed had a real Bussum
+  # listing. rebogroep (Plaats dropdown didn't load) and nederwoon (0 results,
+  # city param not honoured in a browser) couldn't be confirmed, so they're
+  # left out rather than risk mislabelled listings.
+  naarden:
+    name: "Naarden"
+    sources:
+      - name: "pararius"
+        type: "playwright_site"
+        url: "https://www.pararius.com/apartments/naarden"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "huurwoningen"
+        type: "playwright_site"
+        url: "https://www.huurwoningen.nl/en/in/naarden/"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "ikwilhuren"
+        type: "generic_css"
+        url: "https://ikwilhuren.nu/aanbod/"
+        page_url_pattern: "{url}?page={page}"
+        max_pages: 25
+        decimal_comma: true
+        city_filter: ["naarden"]
+        selectors:
+          listing: "div.card-woning"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".card-title a"
+          city: ".card-title + span"
+          price: ".dotted-spans span.fw-bold"
+          sqft: ".dotted-spans > span:has(sup)"
+          beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
+          link: ".card-title a"
+          description: "h2.mb-4 + p"
+
+      - name: "bpdwoningfonds"
+        type: "generic_css"
+        url: "https://hurenbij.bpdwoningfonds.nl/aanbod/"
+        decimal_comma: true
+        city_filter: ["naarden"]
+        selectors:
+          listing: "div.card.card-result-list"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: "h5.card-title a"
+          city: ".card-text"
+          price: ".object-price .value"
+          beds: ".object-rooms .value"
+          sqft: ".object-area .value"
+          link: "h5.card-title a"
+          description: 'div.card-header:-soup-contains("Omschrijving") + div.card-body'
+
+  bussum:
+    name: "Bussum"
+    sources:
+      - name: "pararius"
+        type: "playwright_site"
+        url: "https://www.pararius.com/apartments/bussum"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "huurwoningen"
+        type: "playwright_site"
+        url: "https://www.huurwoningen.nl/en/in/bussum/"
+        selectors:
+          listing: "li.search-list__item--listing"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".listing-search-item__title a"
+          price: ".listing-search-item__price-main"
+          beds: ".illustrated-features__item--number-of-rooms"
+          sqft: ".illustrated-features__item--surface-area"
+          link: ".listing-search-item__link--title"
+          amenities: ".illustrated-features__item--interior"
+          description: ".listing-detail-description__content"
+
+      - name: "ikwilhuren"
+        type: "generic_css"
+        url: "https://ikwilhuren.nu/aanbod/"
+        page_url_pattern: "{url}?page={page}"
+        max_pages: 25
+        decimal_comma: true
+        city_filter: ["bussum"]
+        selectors:
+          listing: "div.card-woning"
+          exclude_keywords: ["student", "serviceapartment", "studentflat"]
+          amenity_keywords: ["Parking", "Park", "Highway", "Train", "Bus", "Washing Machine", "Kitchen", "Balcony", "Terrace", "Garden", "Elevator", "Lift", "Dishwasher", "Dryer", "Storage", "Garage", "Roof Terrace", "Bike Storage", "Solar Panels", "Underfloor Heating", "Air Conditioning", "bare", "upholstered", "furnished", "unfurnished", "kaal", "gestoffeerd", "gemeubileerd", "ongemeubileerd", "balkon", "terras", "tuin", "vaatwasser", "droger", "berging", "dakterras", "fietsenstalling", "fietsenberging", "zonnepanelen", "vloerverwarming", "airconditioning"]
+          address: ".card-title a"
+          city: ".card-title + span"
+          price: ".dotted-spans span.fw-bold"
+          sqft: ".dotted-spans > span:has(sup)"
+          beds: '.dotted-spans > span:-soup-contains("slaapkamer")'
+          link: ".card-title a"
+          description: "h2.mb-4 + p"
+
+      - name: "bpdwoningfonds"
+        type: "generic_css"
+        url: "https://hurenbij.bpdwoningfonds.nl/aanbod/"
+        decimal_comma: true
+        city_filter: ["bussum"]
         selectors:
           listing: "div.card.card-result-list"
           exclude_keywords: ["student", "serviceapartment", "studentflat"]

@@ -75,6 +75,16 @@ CREATE TABLE IF NOT EXISTS user_listing_status (
     PRIMARY KEY (user_id, listing_id)
 );
 
+-- Which source/city combos have completed at least one successful scrape.
+-- Separate from listings because a source can legitimately return zero
+-- listings, and that still counts as scraped.
+CREATE TABLE IF NOT EXISTS scraped_sources (
+    source TEXT NOT NULL,
+    city_key TEXT NOT NULL,
+    first_scraped TEXT NOT NULL,
+    PRIMARY KEY (source, city_key)
+);
+
 CREATE TABLE IF NOT EXISTS application_templates (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL REFERENCES users(id),
@@ -120,6 +130,18 @@ def init_db(db_path: str) -> None:
         _ensure_column(conn, "users", "oauth_provider", "TEXT")
         _ensure_column(conn, "users", "oauth_id", "TEXT")
         _ensure_column(conn, "users", "automation_token", "TEXT")
+        # 1 = stored by its source/city's first-ever scrape (a new city or
+        # source returns its whole existing backlog at once): matched as
+        # normal, but never notified.
+        _ensure_column(conn, "listings", "backlog", "INTEGER NOT NULL DEFAULT 0")
+        # Databases from before scraped_sources existed: any combo that has
+        # listings has clearly been scraped already.
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO scraped_sources (source, city_key, first_scraped)
+            SELECT source, city_key, MIN(first_seen) FROM listings GROUP BY source, city_key
+            """
+        )
         # Partial index (only rows that actually have an oauth link) so two
         # users can't end up linked to the same provider account, without
         # constraining the many password-only rows where both are NULL.
@@ -132,7 +154,7 @@ def init_db(db_path: str) -> None:
 
 # --- listings (shared pool) -------------------------------------------------
 
-def upsert_listing(conn: sqlite3.Connection, listing: Listing, now_iso: str) -> bool:
+def upsert_listing(conn: sqlite3.Connection, listing: Listing, now_iso: str, backlog: bool = False) -> bool:
     """Insert or refresh a listing. Returns True if this is a newly seen listing."""
     existing = conn.execute(
         "SELECT id FROM listings WHERE id = ?", (listing.id,)
@@ -143,14 +165,14 @@ def upsert_listing(conn: sqlite3.Connection, listing: Listing, now_iso: str) -> 
             """
             INSERT INTO listings (
                 id, source, city_key, address, description, price, beds, baths, sqft,
-                pet_friendly, amenities, url, posted_date, first_seen, last_seen
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                pet_friendly, amenities, url, posted_date, first_seen, last_seen, backlog
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 listing.id, listing.source, listing.city_key, listing.address,
                 listing.description, listing.price, listing.beds, listing.baths, listing.sqft,
                 int(listing.pet_friendly), json.dumps(listing.amenities), listing.url,
-                listing.posted_date, now_iso, now_iso,
+                listing.posted_date, now_iso, now_iso, int(backlog),
             ),
         )
         return True
@@ -167,6 +189,20 @@ def upsert_listing(conn: sqlite3.Connection, listing: Listing, now_iso: str) -> 
         ),
     )
     return False
+
+
+def is_source_scraped(conn: sqlite3.Connection, source: str, city_key: str) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM scraped_sources WHERE source = ? AND city_key = ?", (source, city_key)
+    ).fetchone()
+    return row is not None
+
+
+def mark_source_scraped(conn: sqlite3.Connection, source: str, city_key: str, now_iso: str) -> None:
+    conn.execute(
+        "INSERT OR IGNORE INTO scraped_sources (source, city_key, first_scraped) VALUES (?, ?, ?)",
+        (source, city_key, now_iso),
+    )
 
 
 def get_known_listing_data(conn: sqlite3.Connection) -> dict[str, dict]:

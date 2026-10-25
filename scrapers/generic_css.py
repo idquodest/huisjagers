@@ -9,6 +9,35 @@ from text_utils import extract_description, find_keyword_matches
 from .base import Scraper
 
 _NUMBER_RE = re.compile(r"[\d,.]+")
+_USER_AGENT = "Mozilla/5.0 (apartment-finder personal use)"
+
+# Listing pages downloaded during this process (one run.py run = one
+# process, so this lasts exactly one run). Nationwide sites (ikwilhuren,
+# bpdwoningfonds) serve every city from the same pages; without this each
+# city re-downloaded them back to back - up to 25 pages x 10 cities per run -
+# which got the server's IP answered with 403s. A failed page is cached too,
+# so one block costs one request, not one per city.
+_PAGE_CACHE: dict[str, str | requests.RequestException] = {}
+
+
+def page_is_cached(url: str) -> bool:
+    return url in _PAGE_CACHE
+
+
+def _get_page(url: str) -> str:
+    cached = _PAGE_CACHE.get(url)
+    if isinstance(cached, requests.RequestException):
+        raise cached
+    if cached is not None:
+        return cached
+    try:
+        resp = requests.get(url, headers={"User-Agent": _USER_AGENT}, timeout=15)
+        resp.raise_for_status()
+    except requests.RequestException as exc:
+        _PAGE_CACHE[url] = exc
+        raise
+    _PAGE_CACHE[url] = resp.text
+    return resp.text
 
 
 def _select_one_opt(card, selector: str | None):
@@ -73,13 +102,7 @@ class GenericCssScraper(Scraper):
         listings = []
         for page_num in range(1, max_pages + 1):
             page_url = url if page_num == 1 else page_url_pattern.format(url=url, page=page_num)
-            resp = requests.get(
-                page_url,
-                headers={"User-Agent": "Mozilla/5.0 (apartment-finder personal use)"},
-                timeout=15,
-            )
-            resp.raise_for_status()
-            soup = BeautifulSoup(resp.text, "html.parser")
+            soup = BeautifulSoup(_get_page(page_url), "html.parser")
 
             cards = soup.select(selectors["listing"])
             if not cards:
@@ -110,11 +133,7 @@ class GenericCssScraper(Scraper):
 
     def _fetch_description(self, detail_url: str, description_selector: str) -> str:
         try:
-            resp = requests.get(
-                detail_url,
-                headers={"User-Agent": "Mozilla/5.0 (apartment-finder personal use)"},
-                timeout=15,
-            )
+            resp = requests.get(detail_url, headers={"User-Agent": _USER_AGENT}, timeout=15)
             resp.raise_for_status()
         except requests.RequestException:
             return ""

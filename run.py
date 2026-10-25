@@ -1,6 +1,7 @@
 import fcntl
 import logging
 import os
+import time
 from datetime import datetime, timezone
 
 import yaml
@@ -9,6 +10,7 @@ import db
 from matcher import matches
 from notifier import send_notification
 from scrapers import get_scraper
+from scrapers.generic_css import page_is_cached
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger("run")
@@ -31,12 +33,18 @@ def scrape_phase(config: dict, conn, now_iso: str) -> None:
     # a snapshot that doesn't change mid-run (upserts commit per source,
     # but this snapshot only needs to reflect "seen before this run").
     known_listings = db.get_known_listing_data(conn)
+    delay_seconds = config.get("polling", {}).get("delay_between_requests_seconds", 0)
+    fetched_before = False
 
     for city_key, city_cfg in config["cities"].items():
         city_name = city_cfg.get("name", city_key)
 
         for source_cfg in city_cfg.get("sources", []):
             source_name = source_cfg["name"]
+            served_from_cache = source_cfg["type"] == "generic_css" and page_is_cached(source_cfg["url"])
+            if delay_seconds and fetched_before and not served_from_cache:
+                time.sleep(delay_seconds)
+            fetched_before = True
             try:
                 scraper = get_scraper(source_cfg["type"])
                 listings = scraper.fetch(city_key, source_cfg, known_listings)
@@ -48,8 +56,15 @@ def scrape_phase(config: dict, conn, now_iso: str) -> None:
                 continue
 
             logger.info("Fetched %d listings from %s (%s)", len(listings), source_name, city_name)
+            # A source/city's first-ever scrape (new city or new source)
+            # returns its whole existing backlog as "new": store it, but
+            # only notify about listings that appear after that.
+            first_scrape = not db.is_source_scraped(conn, source_name, city_key)
             for listing in listings:
-                db.upsert_listing(conn, listing, now_iso)
+                db.upsert_listing(conn, listing, now_iso, backlog=first_scrape)
+            if first_scrape:
+                db.mark_source_scraped(conn, source_name, city_key, now_iso)
+                logger.info("First scrape of %s (%s): stored %d listings without notifying", source_name, city_name, len(listings))
             # Commit per source, not once at the end of the whole scrape -
             # a single multi-minute transaction would hold SQLite's one
             # writer slot (even in WAL mode) the entire time, blocking the
@@ -86,7 +101,7 @@ def match_phase(config: dict, conn, now_iso: str) -> tuple[int, int]:
                 if is_match:
                     matched_count += 1
                     first_seen = datetime.fromisoformat(row["first_seen"])
-                    if first_seen >= user_created_at and user["ntfy_topic_url"]:
+                    if first_seen >= user_created_at and not row["backlog"] and user["ntfy_topic_url"]:
                         automation_token = user["automation_token"] or db.ensure_automation_token(conn, user["id"])
                         notified = send_notification(user["ntfy_topic_url"], listing, city_name, automation_token)
                         if notified:
