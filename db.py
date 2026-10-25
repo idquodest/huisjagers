@@ -85,6 +85,13 @@ CREATE TABLE IF NOT EXISTS scraped_sources (
     PRIMARY KEY (source, city_key)
 );
 
+-- Last time a source with min_interval_minutes (config.yaml) was tried,
+-- successful or not, keyed by source name across all cities.
+CREATE TABLE IF NOT EXISTS source_schedule (
+    source TEXT PRIMARY KEY,
+    last_attempt TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS application_templates (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL REFERENCES users(id),
@@ -202,6 +209,19 @@ def mark_source_scraped(conn: sqlite3.Connection, source: str, city_key: str, no
     conn.execute(
         "INSERT OR IGNORE INTO scraped_sources (source, city_key, first_scraped) VALUES (?, ?, ?)",
         (source, city_key, now_iso),
+    )
+
+
+def get_source_last_attempt(conn: sqlite3.Connection, source: str) -> str | None:
+    row = conn.execute("SELECT last_attempt FROM source_schedule WHERE source = ?", (source,)).fetchone()
+    return row["last_attempt"] if row else None
+
+
+def set_source_last_attempt(conn: sqlite3.Connection, source: str, now_iso: str) -> None:
+    conn.execute(
+        "INSERT INTO source_schedule (source, last_attempt) VALUES (?, ?) "
+        "ON CONFLICT(source) DO UPDATE SET last_attempt = excluded.last_attempt",
+        (source, now_iso),
     )
 
 

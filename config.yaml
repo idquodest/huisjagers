@@ -5,7 +5,10 @@
 # user_city_preferences), set via the My Matches page's filter bar, not here.
 
 polling:
-  interval_minutes: 20
+  # Informational - the real schedule is huisjagers.timer on the container
+  # (OnUnitActiveSec). Keep the two in sync. 30 rather than 20 to keep the
+  # request volume low after repeated blocks.
+  interval_minutes: 30
   # Pause between source fetches within a run (skipped when a source's page
   # was already downloaded earlier in the same run - see generic_css.py's
   # page cache). Back-to-back requests across 10 cities got ikwilhuren and
@@ -114,11 +117,16 @@ cities:
       # ikwilhuren.nu is plain static HTML (generic_css works, no browser
       # needed) but - like rebogroep - lists rentals nationwide with no
       # server-side city filter, so city_filter + pagination both apply.
+      # min_interval_minutes (on every ikwilhuren entry): its nationwide
+      # catalogue is up to 25 pages per check, the heaviest load of any
+      # source and the one that kept getting blocked, so it's checked at
+      # most every 2 hours instead of every run.
       # Its "beds" field is genuinely bedroom count ("slaapkamers"), not a
       # total-room proxy like rebogroep's.
       - name: "ikwilhuren"
         type: "generic_css"
         url: "https://ikwilhuren.nu/aanbod/"
+        min_interval_minutes: 120
         page_url_pattern: "{url}?page={page}"
         max_pages: 25
         # Dutch price format ("1.225,-" = twelve-twenty-five euros, no
@@ -249,6 +257,7 @@ cities:
       - name: "ikwilhuren"
         type: "generic_css"
         url: "https://ikwilhuren.nu/aanbod/"
+        min_interval_minutes: 120
         page_url_pattern: "{url}?page={page}"
         max_pages: 25
         decimal_comma: true
@@ -356,6 +365,7 @@ cities:
       - name: "ikwilhuren"
         type: "generic_css"
         url: "https://ikwilhuren.nu/aanbod/"
+        min_interval_minutes: 120
         page_url_pattern: "{url}?page={page}"
         max_pages: 25
         decimal_comma: true
@@ -451,6 +461,7 @@ cities:
       - name: "ikwilhuren"
         type: "generic_css"
         url: "https://ikwilhuren.nu/aanbod/"
+        min_interval_minutes: 120
         page_url_pattern: "{url}?page={page}"
         max_pages: 25
         decimal_comma: true
@@ -520,6 +531,7 @@ cities:
       - name: "ikwilhuren"
         type: "generic_css"
         url: "https://ikwilhuren.nu/aanbod/"
+        min_interval_minutes: 120
         page_url_pattern: "{url}?page={page}"
         max_pages: 25
         decimal_comma: true
@@ -615,6 +627,7 @@ cities:
       - name: "ikwilhuren"
         type: "generic_css"
         url: "https://ikwilhuren.nu/aanbod/"
+        min_interval_minutes: 120
         page_url_pattern: "{url}?page={page}"
         max_pages: 25
         decimal_comma: true
@@ -722,6 +735,7 @@ cities:
       - name: "ikwilhuren"
         type: "generic_css"
         url: "https://ikwilhuren.nu/aanbod/"
+        min_interval_minutes: 120
         page_url_pattern: "{url}?page={page}"
         max_pages: 25
         decimal_comma: true
@@ -835,6 +849,7 @@ cities:
       - name: "ikwilhuren"
         type: "generic_css"
         url: "https://ikwilhuren.nu/aanbod/"
+        min_interval_minutes: 120
         page_url_pattern: "{url}?page={page}"
         max_pages: 25
         decimal_comma: true
@@ -922,6 +937,7 @@ cities:
       - name: "ikwilhuren"
         type: "generic_css"
         url: "https://ikwilhuren.nu/aanbod/"
+        min_interval_minutes: 120
         page_url_pattern: "{url}?page={page}"
         max_pages: 25
         decimal_comma: true
@@ -1007,6 +1023,7 @@ cities:
       - name: "ikwilhuren"
         type: "generic_css"
         url: "https://ikwilhuren.nu/aanbod/"
+        min_interval_minutes: 120
         page_url_pattern: "{url}?page={page}"
         max_pages: 25
         decimal_comma: true

@@ -2,7 +2,7 @@ import fcntl
 import logging
 import os
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import yaml
 
@@ -24,6 +24,26 @@ def load_config(path: str = "config.yaml") -> dict:
         return yaml.safe_load(f)
 
 
+def source_is_due(conn, source_cfg: dict, now_iso: str, decided: dict) -> bool:
+    """Sources with min_interval_minutes are only fetched once that long has
+    passed since their last attempt (failed attempts count, so a blocking
+    site isn't knocked on every run). Decided once per source name per run,
+    so every city sharing that source gets the same answer."""
+    interval = source_cfg.get("min_interval_minutes")
+    if not interval:
+        return True
+    name = source_cfg["name"]
+    if name not in decided:
+        last = db.get_source_last_attempt(conn, name)
+        due = last is None or datetime.fromisoformat(now_iso) - datetime.fromisoformat(last) >= timedelta(minutes=interval)
+        decided[name] = due
+        if due:
+            db.set_source_last_attempt(conn, name, now_iso)
+        else:
+            logger.info("Skipping %s this run (fetched at most every %d minutes, last tried %s)", name, interval, last)
+    return decided[name]
+
+
 def scrape_phase(config: dict, conn, now_iso: str) -> None:
     """Fetch every configured source and upsert into the shared listings
     pool. No knowledge of users/preferences - matching happens separately
@@ -37,12 +57,15 @@ def scrape_phase(config: dict, conn, now_iso: str) -> None:
     delay_seconds = config.get("polling", {}).get("delay_between_requests_seconds", 0)
     scraper_base.PAGE_DELAY_SECONDS = config.get("polling", {}).get("delay_between_pages_seconds", scraper_base.PAGE_DELAY_SECONDS)
     fetched_before = False
+    due_decisions: dict[str, bool] = {}
 
     for city_key, city_cfg in config["cities"].items():
         city_name = city_cfg.get("name", city_key)
 
         for source_cfg in city_cfg.get("sources", []):
             source_name = source_cfg["name"]
+            if not source_is_due(conn, source_cfg, now_iso, due_decisions):
+                continue
             served_from_cache = source_cfg["type"] == "generic_css" and page_is_cached(source_cfg["url"])
             if delay_seconds and fetched_before and not served_from_cache:
                 time.sleep(delay_seconds)
