@@ -18,8 +18,26 @@ polling:
   # a new listing's own detail page), so no site sees back-to-back requests.
   delay_between_pages_seconds: 5
 
+# fetch_detail_pages: false (set on every pararius and huurwoningen source):
+# Cloudflare answers their individual listing pages with a bot challenge
+# almost every time - 5,399 of 5,446 stored listings never got a real
+# description (checked 2026-10-25) - so those page loads only added block
+# risk. Listings from these sources keep their card text, and the dashboard
+# says the full description isn't available. Consequence: details that only
+# appear on the listing page (e.g. "students only") can't be filtered on;
+# users hide such listings by hand.
+#
+# If these sites (or ikwilhuren/bpdwoningfonds) keep blocking even at this
+# reduced request volume, the owner's plan is to route outbound scraper
+# traffic through a proxy later.
+
 database:
   path: "huisjagers.db"
+
+# Listings no scrape has seen for this many days are deleted each run (no
+# re-scraping to check). Measured by last_seen, not first_seen, so listings
+# that are still up stay however old they are.
+listing_retention_days: 14
 
 cities:
   utrecht:
@@ -82,6 +100,7 @@ cities:
       # 1 long before enough newer ones could push it off.
       - name: "pararius"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.pararius.com/apartments/utrecht"
         selectors:
           listing: "li.search-list__item--listing"
@@ -101,6 +120,7 @@ cities:
       # sort, same reasoning for only scraping page 1.
       - name: "huurwoningen"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.huurwoningen.nl/en/in/utrecht/"
         selectors:
           listing: "li.search-list__item--listing"
@@ -226,6 +246,7 @@ cities:
 
       - name: "pararius"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.pararius.com/apartments/amersfoort"
         selectors:
           listing: "li.search-list__item--listing"
@@ -241,6 +262,7 @@ cities:
 
       - name: "huurwoningen"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.huurwoningen.nl/en/in/amersfoort/"
         selectors:
           listing: "li.search-list__item--listing"
@@ -334,6 +356,7 @@ cities:
 
       - name: "pararius"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.pararius.com/apartments/hilversum"
         selectors:
           listing: "li.search-list__item--listing"
@@ -349,6 +372,7 @@ cities:
 
       - name: "huurwoningen"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.huurwoningen.nl/en/in/hilversum/"
         selectors:
           listing: "li.search-list__item--listing"
@@ -430,6 +454,7 @@ cities:
     sources:
       - name: "pararius"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.pararius.com/apartments/naarden"
         selectors:
           listing: "li.search-list__item--listing"
@@ -445,6 +470,7 @@ cities:
 
       - name: "huurwoningen"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.huurwoningen.nl/en/in/naarden/"
         selectors:
           listing: "li.search-list__item--listing"
@@ -500,6 +526,7 @@ cities:
     sources:
       - name: "pararius"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.pararius.com/apartments/bussum"
         selectors:
           listing: "li.search-list__item--listing"
@@ -515,6 +542,7 @@ cities:
 
       - name: "huurwoningen"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.huurwoningen.nl/en/in/bussum/"
         selectors:
           listing: "li.search-list__item--listing"
@@ -596,6 +624,7 @@ cities:
 
       - name: "pararius"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.pararius.com/apartments/rotterdam"
         selectors:
           listing: "li.search-list__item--listing"
@@ -611,6 +640,7 @@ cities:
 
       - name: "huurwoningen"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.huurwoningen.nl/en/in/rotterdam/"
         selectors:
           listing: "li.search-list__item--listing"
@@ -704,6 +734,7 @@ cities:
 
       - name: "pararius"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.pararius.com/apartments/amsterdam"
         selectors:
           listing: "li.search-list__item--listing"
@@ -719,6 +750,7 @@ cities:
 
       - name: "huurwoningen"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.huurwoningen.nl/en/in/amsterdam/"
         selectors:
           listing: "li.search-list__item--listing"
@@ -818,6 +850,7 @@ cities:
 
       - name: "pararius"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.pararius.com/apartments/den-haag"
         selectors:
           listing: "li.search-list__item--listing"
@@ -833,6 +866,7 @@ cities:
 
       - name: "huurwoningen"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.huurwoningen.nl/en/in/den-haag/"
         selectors:
           listing: "li.search-list__item--listing"
@@ -906,6 +940,7 @@ cities:
     sources:
       - name: "pararius"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.pararius.com/apartments/groningen"
         selectors:
           listing: "li.search-list__item--listing"
@@ -921,6 +956,7 @@ cities:
 
       - name: "huurwoningen"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.huurwoningen.nl/en/in/groningen/"
         selectors:
           listing: "li.search-list__item--listing"
@@ -992,6 +1028,7 @@ cities:
     sources:
       - name: "pararius"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.pararius.com/apartments/zwolle"
         selectors:
           listing: "li.search-list__item--listing"
@@ -1007,6 +1044,7 @@ cities:
 
       - name: "huurwoningen"
         type: "playwright_site"
+        fetch_detail_pages: false
         url: "https://www.huurwoningen.nl/en/in/zwolle/"
         selectors:
           listing: "li.search-list__item--listing"

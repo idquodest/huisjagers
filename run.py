@@ -160,6 +160,14 @@ def main() -> None:
             scrape_phase(config, conn, now_iso)
             conn.commit()
 
+            retention_days = config.get("listing_retention_days")
+            if retention_days:
+                cutoff = (datetime.fromisoformat(now_iso) - timedelta(days=retention_days)).isoformat()
+                removed = db.delete_stale_listings(conn, cutoff)
+                conn.commit()
+                if removed:
+                    logger.info("Removed %d listings not seen in %d days", removed, retention_days)
+
             matched_count, notified_count = match_phase(config, conn, now_iso)
             conn.commit()
 

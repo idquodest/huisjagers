@@ -133,8 +133,14 @@
   {% endif %}
 </div>
 
+{% if show_hidden %}
+  <p class="hidden-bar">Showing {{ hidden_count }} hidden listing{{ '' if hidden_count == 1 else 's' }}. <a class="link-plain" href="{{ hidden_toggle_url }}">Back to all listings</a></p>
+{% elif hidden_count %}
+  <p class="hidden-bar"><a class="link-plain" href="{{ hidden_toggle_url }}">{{ hidden_count }} hidden listing{{ '' if hidden_count == 1 else 's' }}</a></p>
+{% endif %}
+
 {% if listings|length == 0 %}
-  <p class="hint">No matching listings right now.</p>
+  <p class="hint">{{ 'No hidden listings here.' if show_hidden else 'No matching listings right now.' }}</p>
 {% endif %}
 
 <div class="table-scroll">
@@ -163,7 +169,7 @@
     <tr
       data-address="{{ l.address or '' }}"
       data-meta="{{ '€%.0f'|format(l.price) if l.price is not none else '-' }} · {{ l.beds|int if l.beds is not none else 'n/a' }} rooms · {{ l.sqft|int if l.sqft else '-' }} m² · {{ l.source|capitalize }}"
-      data-description="{{ l.description or '' }}"
+      data-description="{% if l.source in no_detail_sources %}No full description available: {{ l.source|capitalize }} blocks automated access to its listing pages (Cloudflare bot check), so only the summary from the search results is stored. Open the listing to read the details.{% else %}{{ l.description or '' }}{% endif %}"
       data-maps-url="{% if l.address %}https://www.google.com/maps/search/?api=1&query={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}{% endif %}"
       data-map-embed-url="{% if l.address %}https://www.google.com/maps?q={{ (l.address ~ ', ' ~ cities.get(l.city_key, l.city_key))|urlencode }}&z=13&output=embed{% endif %}"
       data-view-url="{{ l.url }}"
@@ -189,7 +195,14 @@
         {{ date_part }}<br>{{ time_part }}
       </td>
       <td data-label="">
-        <button type="button" class="secondary see-more-btn" onclick="openDrawer(this)">See more</button>
+        <div class="row-actions">
+          <button type="button" class="secondary see-more-btn" onclick="openDrawer(this)">See more</button>
+          <form method="post" action="/listings/{{ l.id }}/{{ 'unhide' if show_hidden else 'hide' }}">
+            <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+            <input type="hidden" name="next_url" value="{{ current_url }}">
+            <button type="submit" class="secondary">{{ 'Unhide' if show_hidden else 'Hide' }}</button>
+          </form>
+        </div>
       </td>
     </tr>
     {% endfor %}

@@ -145,7 +145,7 @@ class PlaywrightSiteScraper(Scraper):
                         if not self._go_to_next_page(page, next_page_selector, wait_selector):
                             break
 
-                if detail_amenities or amenity_keywords or description_selector:
+                if source_cfg.get("fetch_detail_pages", True) and (detail_amenities or amenity_keywords or description_selector):
                     for listing in listings:
                         # Already-seen listings keep whatever detail-page
                         # amenities/description were found the first time,

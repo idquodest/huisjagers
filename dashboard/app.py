@@ -736,6 +736,13 @@ def index(request: Request):
                     matched_rows.append(row)
         matched_rows = _dedupe_cross_platform_listings(matched_rows)
 
+        # After dedupe, so hiding the shown copy of a pararius/huurwoningen
+        # duplicate doesn't make its twin pop up in its place.
+        hidden_ids = db.get_hidden_listing_ids(conn, session["user_id"])
+        show_hidden = qp.get("show_hidden") == "1"
+        hidden_count = sum(1 for row in matched_rows if row["id"] in hidden_ids)
+        matched_rows = [row for row in matched_rows if (row["id"] in hidden_ids) == show_hidden]
+
         # A "saved vs. live" comparison only makes sense with exactly one
         # city in scope - with several (or zero) checked there's no single
         # "the" saved filter to compare the current view against.
@@ -781,6 +788,13 @@ def index(request: Request):
     cities = {key: cfg.get("name", key) for key, cfg in config["cities"].items()}
     selected_city_names = [cities[c] for c in selected_cities]
     all_sources = sorted({s["name"] for city_cfg in config["cities"].values() for s in city_cfg.get("sources", [])})
+    no_detail_sources = {
+        s["name"] for city_cfg in config["cities"].values() for s in city_cfg.get("sources", [])
+        if s.get("fetch_detail_pages") is False
+    }
+    current_url = request.url.path + (f"?{request.url.query}" if request.url.query else "")
+    list_params = [(k, v) for k, v in base_params if k != "show_hidden"]
+    hidden_toggle_url = "/?" + urlencode(list_params if show_hidden else list_params + [("show_hidden", "1")])
     return templates.TemplateResponse(
         request, "index.html",
         {
@@ -792,5 +806,40 @@ def index(request: Request):
             "filters_are_saved": filters_are_saved,
             "saved_summary": saved_summary,
             "has_no_active_notifications": has_no_active_notifications,
+            "show_hidden": show_hidden, "hidden_count": hidden_count,
+            "no_detail_sources": no_detail_sources, "current_url": current_url,
+            "hidden_toggle_url": hidden_toggle_url,
         },
     )
+
+
+def _safe_next(next_url: str) -> str:
+    # Same-site paths only - never an absolute, protocol-relative ("//") or
+    # backslash ("/\") URL that a browser would treat as another site.
+    if next_url.startswith("/") and not next_url.startswith(("//", "/\\")):
+        return next_url
+    return "/"
+
+
+def _set_listing_hidden(request: Request, listing_id: str, csrf_token: str, next_url: str, hidden: bool):
+    with db.connect(_db_path()) as conn:
+        session = auth.get_current_user(request, conn)
+        if session is None:
+            return RedirectResponse("/login", status_code=303)
+        if auth.check_csrf(request, session, csrf_token) and db.get_listing_by_id(conn, listing_id):
+            if hidden:
+                db.hide_listing(conn, session["user_id"], listing_id, datetime.now(timezone.utc).isoformat())
+            else:
+                db.unhide_listing(conn, session["user_id"], listing_id)
+            conn.commit()
+    return RedirectResponse(_safe_next(next_url), status_code=303)
+
+
+@app.post("/listings/{listing_id}/hide")
+def hide_listing(request: Request, listing_id: str, csrf_token: str = Form(...), next_url: str = Form("/")):
+    return _set_listing_hidden(request, listing_id, csrf_token, next_url, hidden=True)
+
+
+@app.post("/listings/{listing_id}/unhide")
+def unhide_listing(request: Request, listing_id: str, csrf_token: str = Form(...), next_url: str = Form("/")):
+    return _set_listing_hidden(request, listing_id, csrf_token, next_url, hidden=False)

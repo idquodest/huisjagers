@@ -85,6 +85,15 @@ CREATE TABLE IF NOT EXISTS scraped_sources (
     PRIMARY KEY (source, city_key)
 );
 
+-- Listings a user hid from their own view (e.g. student-only listings the
+-- scraper can't detect). Per user; other users still see them.
+CREATE TABLE IF NOT EXISTS user_hidden_listings (
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    listing_id TEXT NOT NULL,
+    hidden_at TEXT NOT NULL,
+    PRIMARY KEY (user_id, listing_id)
+);
+
 -- Last time a source with min_interval_minutes (config.yaml) was tried,
 -- successful or not, keyed by source name across all cities.
 CREATE TABLE IF NOT EXISTS source_schedule (
@@ -223,6 +232,13 @@ def set_source_last_attempt(conn: sqlite3.Connection, source: str, now_iso: str)
         "ON CONFLICT(source) DO UPDATE SET last_attempt = excluded.last_attempt",
         (source, now_iso),
     )
+
+
+def delete_stale_listings(conn: sqlite3.Connection, cutoff_iso: str) -> int:
+    """Remove listings no scrape has seen since cutoff_iso. user_listing_status
+    and user_hidden_listings rows are kept on purpose: if a listing comes
+    back, nobody is notified about it again and it stays hidden."""
+    return conn.execute("DELETE FROM listings WHERE last_seen < ?", (cutoff_iso,)).rowcount
 
 
 def get_known_listing_data(conn: sqlite3.Connection) -> dict[str, dict]:
@@ -500,6 +516,24 @@ def mark_user_match_status(
             now_iso if matched else None, now_iso if notified else None,
         ),
     )
+
+
+# --- hidden listings -------------------------------------------------------------
+
+def hide_listing(conn: sqlite3.Connection, user_id: int, listing_id: str, now_iso: str) -> None:
+    conn.execute(
+        "INSERT OR IGNORE INTO user_hidden_listings (user_id, listing_id, hidden_at) VALUES (?, ?, ?)",
+        (user_id, listing_id, now_iso),
+    )
+
+
+def unhide_listing(conn: sqlite3.Connection, user_id: int, listing_id: str) -> None:
+    conn.execute("DELETE FROM user_hidden_listings WHERE user_id = ? AND listing_id = ?", (user_id, listing_id))
+
+
+def get_hidden_listing_ids(conn: sqlite3.Connection, user_id: int) -> set[str]:
+    rows = conn.execute("SELECT listing_id FROM user_hidden_listings WHERE user_id = ?", (user_id,)).fetchall()
+    return {row["listing_id"] for row in rows}
 
 
 # --- application templates -----------------------------------------------------
