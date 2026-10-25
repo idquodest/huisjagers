@@ -171,7 +171,10 @@
       data-auto-apply-url="{% if l.source in auto_apply_sources %}/apply/{{ l.id }}/auto{% endif %}"
     >
       <td data-label="Address">
-        <a class="address-link" href="{{ l.url }}" target="_blank" rel="noopener noreferrer">{{ l.address }}</a>
+        <div class="address-cell">
+          <a class="address-link" href="{{ l.url }}" target="_blank" rel="noopener noreferrer">{{ l.address }}</a>
+          <span class="address-city">{{ cities.get(l.city_key, l.city_key) }}</span>
+        </div>
       </td>
       <td data-label="Price">{{ '€%.0f'|format(l.price) if l.price is not none else '-' }}</td>
       <td data-label="Rooms" class="cell-center">{{ l.beds|int if l.beds is not none else 'n/a' }}</td>
