@@ -11,6 +11,9 @@ polling:
   # page cache). Back-to-back requests across 10 cities got ikwilhuren and
   # bpdwoningfonds returning 403 and pararius/huurwoningen failing ~25-30%.
   delay_between_requests_seconds: 8
+  # Pause before every further page load within one source (next list page,
+  # a new listing's own detail page), so no site sees back-to-back requests.
+  delay_between_pages_seconds: 5
 
 database:
   path: "huisjagers.db"

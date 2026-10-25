@@ -9,6 +9,7 @@ import yaml
 import db
 from matcher import matches
 from notifier import send_notification
+from scrapers import base as scraper_base
 from scrapers import get_scraper
 from scrapers.generic_css import page_is_cached
 
@@ -34,6 +35,7 @@ def scrape_phase(config: dict, conn, now_iso: str) -> None:
     # but this snapshot only needs to reflect "seen before this run").
     known_listings = db.get_known_listing_data(conn)
     delay_seconds = config.get("polling", {}).get("delay_between_requests_seconds", 0)
+    scraper_base.PAGE_DELAY_SECONDS = config.get("polling", {}).get("delay_between_pages_seconds", scraper_base.PAGE_DELAY_SECONDS)
     fetched_before = False
 
     for city_key, city_cfg in config["cities"].items():

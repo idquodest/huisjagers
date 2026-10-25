@@ -1,6 +1,17 @@
+import time
 from abc import ABC, abstractmethod
 
 from models import Listing
+
+# Pause before every page load after a source's first one (next list page,
+# a listing's own detail page), so no site ever gets back-to-back requests.
+# run.py sets this from config.yaml's polling.delay_between_pages_seconds.
+PAGE_DELAY_SECONDS = 5.0
+
+
+def pause_between_pages() -> None:
+    if PAGE_DELAY_SECONDS:
+        time.sleep(PAGE_DELAY_SECONDS)
 
 
 class Scraper(ABC):

@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 
 from models import Listing
 from text_utils import extract_description, find_keyword_matches
-from .base import Scraper
+from .base import Scraper, pause_between_pages
 
 _NUMBER_RE = re.compile(r"[\d,.]+")
 
@@ -124,6 +124,7 @@ class PlaywrightSiteScraper(Scraper):
                 if page_url_pattern:
                     for page_num in range(1, max_pages + 1):
                         if page_num > 1:
+                            pause_between_pages()
                             page.goto(page_url_pattern.format(url=url, page=page_num), wait_until="load", timeout=45000)
                             try:
                                 page.wait_for_selector(wait_selector, timeout=10000)
@@ -157,6 +158,7 @@ class PlaywrightSiteScraper(Scraper):
                             if known["description"]:
                                 listing.description = known["description"]
                         else:
+                            pause_between_pages()
                             found_amenities, detail_text = self._fetch_detail_data(
                                 page, listing.url, detail_amenities, amenity_keywords, description_selector
                             )
@@ -193,6 +195,7 @@ class PlaywrightSiteScraper(Scraper):
         next_btn = page.locator(next_page_selector).first
         if next_btn.count() == 0 or next_btn.get_attribute("disabled") is not None:
             return False
+        pause_between_pages()
         next_btn.click(timeout=10000)
         page.wait_for_timeout(1000)
         try:

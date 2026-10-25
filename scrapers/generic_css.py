@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 
 from models import Listing
 from text_utils import extract_description, find_keyword_matches
-from .base import Scraper
+from .base import Scraper, pause_between_pages
 
 _NUMBER_RE = re.compile(r"[\d,.]+")
 _USER_AGENT = "Mozilla/5.0 (apartment-finder personal use)"
@@ -102,6 +102,8 @@ class GenericCssScraper(Scraper):
         listings = []
         for page_num in range(1, max_pages + 1):
             page_url = url if page_num == 1 else page_url_pattern.format(url=url, page=page_num)
+            if page_num > 1 and not page_is_cached(page_url):
+                pause_between_pages()
             soup = BeautifulSoup(_get_page(page_url), "html.parser")
 
             cards = soup.select(selectors["listing"])
@@ -125,6 +127,7 @@ class GenericCssScraper(Scraper):
                     if known_description:
                         listing.description = known_description
                 else:
+                    pause_between_pages()
                     described = self._fetch_description(listing.url, description_selector)
                     if described:
                         listing.description = described
